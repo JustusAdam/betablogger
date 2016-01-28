@@ -16,8 +16,6 @@ mkProvider fetchTask renderer interface =
     History.setPath (Erl.toString url)
     `Task.andThen` \_ -> (fetchTask url.query)
     `Task.andThen` (Task.succeed << renderer interface.navigator)
-    `Task.andThen` (Signal.send interface.canvas << Page)
-    `Task.onError` (Signal.send interface.canvas << PageNotFound << toString)
 
 
 

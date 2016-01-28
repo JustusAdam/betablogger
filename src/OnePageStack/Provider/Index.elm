@@ -7,9 +7,10 @@ import OnePageStack.Provider.Util exposing (..)
 import Http
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Path.Url exposing ((</>))
 
-fetchIndex : a -> Task String (List PostMeta)
-fetchIndex _ = Task.mapError toString <| Http.get (Decode.list postMetaDecoder) "index.json"
+fetchIndex : String -> a -> Task String (List PostMeta)
+fetchIndex basePath _ = Task.mapError toString <| Http.get (Decode.list postMetaDecoder) <| basePath </> "index.json"
 
 renderIndex : Targeter -> (List PostMeta) -> Html
 renderIndex chgr l =
@@ -17,8 +18,8 @@ renderIndex chgr l =
     <| List.map (\pm -> li [] [a [ onClick chgr (navigate "post" pm.location) ] [ text pm.title ]])
         l
 
-indexProvider : ProviderFunc
-indexProvider = mkProvider fetchIndex renderIndex
+indexProvider : String -> ProviderFunc
+indexProvider basePath = mkProvider (fetchIndex basePath) renderIndex
 
 postMetaDecoder : Decode.Decoder PostMeta
 postMetaDecoder = Decode.object2 PostMeta ("location" := Decode.string) ("title" := Decode.string)

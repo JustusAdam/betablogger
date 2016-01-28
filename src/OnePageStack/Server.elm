@@ -1,5 +1,6 @@
 module OnePageStack.Server where
 
+
 import Html exposing (..)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
@@ -24,6 +25,8 @@ handleRequest defaultProvider providers interface =
     provider = Dict.get "type" interface.currentUrl.query `Maybe.andThen` flip Dict.get providers |> withDefault defaultProvider
   in
     provider interface
+    `Task.andThen` (Signal.send interface.canvas << Page)
+    `Task.onError` (Signal.send interface.canvas << PageNotFound << toString)
 
 view : Page -> Html
 view p =

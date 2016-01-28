@@ -8,15 +8,16 @@ import Erl exposing (Query, Url)
 import Dict
 import OnePageStack.Types exposing (..)
 import OnePageStack.Provider.Util exposing (..)
+import Path.Url exposing ((</>))
 
-fetchPost : Query -> Task String String
-fetchPost params =
+fetchPost : String -> Query -> Task String String
+fetchPost basePath params =
   case Dict.get "page" params of
     Nothing -> Task.fail "No page specified"
-    Just page -> Task.mapError toString <| Http.getString page
+    Just page -> Task.mapError toString <| Http.getString (basePath </> page)
 
 renderPost : a -> String -> Html
 renderPost _ = Markdown.toHtml
 
-postProvider : ProviderFunc
-postProvider = mkProvider fetchPost renderPost
+postProvider : String -> ProviderFunc
+postProvider basePath = mkProvider (fetchPost basePath) renderPost

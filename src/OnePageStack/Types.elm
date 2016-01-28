@@ -14,7 +14,7 @@ type alias LocationChange = Maybe Query
 type alias PostMeta = { location : String, title : String }
 type alias Targeter = Signal.Address LocationChange
 type alias ContentHook = Signal.Address Page
-type alias ProviderFunc = AppInterface -> Task String ()
+type alias ProviderFunc = AppInterface -> Task String Html
 type alias Providers = Dict.Dict String ProviderFunc
 type alias AppInterface =
   { canvas : ContentHook
