@@ -8,7 +8,7 @@ import Html exposing (Html)
 import History
 
 
-mkProvider : (Query -> Task String a) -> (Targeter -> a -> Html) -> ProviderFunc
+mkProvider : (Query -> Task String a) -> (Targeter -> a -> Html) -> Handler
 mkProvider fetchTask renderer interface =
   let
     url = interface.currentUrl
@@ -23,5 +23,5 @@ navigate : String -> String -> LocationChange
 navigate s1 s2 = Just <| Dict.fromList [("type", s1), ("page", s2)]
 
 
-withTemplate : (Html -> Html) -> ProviderFunc -> ProviderFunc
+withTemplate : (Html -> Html) -> Handler -> Handler
 withTemplate template f interface = Task.map template (f interface)

@@ -18,7 +18,7 @@ renderIndex chgr l =
     <| List.map (\pm -> li [] [a [ onClick chgr (navigate "post" pm.location) ] [ text pm.title ]])
         l
 
-indexProvider : String -> ProviderFunc
+indexProvider : String -> Handler
 indexProvider basePath = mkProvider (fetchIndex basePath) renderIndex
 
 postMetaDecoder : Decode.Decoder PostMeta

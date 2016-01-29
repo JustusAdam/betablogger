@@ -61,5 +61,5 @@ acquired : Html -> AcquireComponent
 acquired html _ = Task.mapError toString <| Task.succeed <| Just html
 
 
-withTemplate : Template -> ProviderFunc -> ProviderFunc
+withTemplate : Template -> Handler -> Handler
 withTemplate t f i = f i `Task.andThen` t i

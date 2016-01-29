@@ -19,5 +19,5 @@ fetchPost basePath params =
 renderPost : a -> String -> Html
 renderPost _ = Markdown.toHtml
 
-postProvider : String -> ProviderFunc
+postProvider : String -> Handler
 postProvider basePath = mkProvider (fetchPost basePath) renderPost

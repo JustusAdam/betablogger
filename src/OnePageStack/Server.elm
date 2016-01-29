@@ -17,9 +17,7 @@ import Maybe exposing (withDefault)
 import OnePageStack.Types exposing (..)
 
 
--- MODEL
-
-handleRequest : ProviderFunc -> Providers -> AppInterface -> Task String ()
+handleRequest : Handler -> Providers -> AppInterface -> Task String ()
 handleRequest defaultProvider providers interface =
   let
     provider = Dict.get "type" interface.currentUrl.query `Maybe.andThen` flip Dict.get providers |> withDefault defaultProvider
@@ -44,7 +42,7 @@ locationChanger = Signal.mailbox Nothing
 interfaceSignal : Signal Url -> Signal AppInterface
 interfaceSignal = Signal.map (AppInterface contentHook.address locationChanger.address)
 
-server : ProviderFunc -> Providers -> Signal Url -> Signal (Task String ())
+server : Handler -> Providers -> Signal Url -> Signal (Task String ())
 server defaultProvider p = Signal.map (handleRequest defaultProvider p) << interfaceSignal
 
 currentLocation : Signal String -> Signal Url
