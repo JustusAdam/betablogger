@@ -21,3 +21,7 @@ mkProvider fetchTask renderer interface =
 
 navigate : String -> String -> LocationChange
 navigate s1 s2 = Just <| Dict.fromList [("type", s1), ("page", s2)]
+
+
+withTemplate : (Html -> Html) -> ProviderFunc -> ProviderFunc
+withTemplate template f interface = Task.map template (f interface)
