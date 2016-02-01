@@ -9,10 +9,26 @@ import Dict exposing (Dict)
 import Maybe exposing (withDefault)
 import Http
 import Erl
+import Path.Url exposing ((</>))
+import Task
+import Markdown
+import Json.Decode as Decode
+import Util exposing (singleton)
 
 
-sidebar : AcquireComponent
-sidebar = acquired <| div [] [text "hello sidebar"]
+sidebar : String -> AcquireComponent
+sidebar basePath _ = 
+  Http.get (Decode.list Decode.string) (basePath </> "sidebar.json")
+  |> Task.map 
+      (List.map (
+        Markdown.toHtml
+        >> singleton
+        >> li [ style [("list-style-type", "none"), ("margin", "none")] ]
+        )
+      >> ul []
+      >> Just)
+  |> Task.mapError toString 
+  
 
 
 (:=) = (,)
@@ -72,7 +88,7 @@ pageTemplate =
                 ] ]
       [ div [ style centerBlock ]
         [ footerBlock
-          [ text "This site is built with the wonderful Elm language" ]
+          [ text "This site is built with the wonderful ", a [href "http://elm-lang.org"] [ text "Elm"], text " language" ]
         
         , footerBlock [ text "" ]
         , footerBlock
@@ -92,9 +108,9 @@ postTemplate =
   )
 
 
-indexTemplate : Template
-indexTemplate = 
-  acquire sidebar `T.andThen` \sb ->
+indexTemplate : String -> Template
+indexTemplate basePath = 
+  acquire (sidebar basePath) `T.andThen` \sb ->
   pageTemplate `nest` 
     render (\main ->
         div []

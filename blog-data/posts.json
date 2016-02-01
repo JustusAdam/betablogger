@@ -1,0 +1,78 @@
+[
+    {
+        "date": "2015-04-16",
+        "location": "initial-post.md",
+        "title": "initial post",
+        "author": "Justus",
+        "description": "I put my homepage on a new foundation, here's how"
+    },
+    {
+        "date": "2015-09-04",
+        "location": "travis.md",
+        "title": "Haskell on Travis CI",
+        "description": "I looked at the travis config and status of my current Haskell projects again and fixed a few things as a result.",
+        "author": "Justus"
+    },
+    {
+        "date": "2015-07-30",
+        "location": "basic-auth-haskell.md",
+        "title": "Basic authenticated http requests and forms in Haskell",
+        "description": "There are no examples for using simple authentication with the Haskell HTTP library that I could find. So here is how it's done."
+    },
+    {
+        "date": "2015-07-18",
+        "location": "open-icons.md",
+        "author": "Justus",
+        "title": "Open source icons are awesome"
+    },
+    {
+        "date": "2015-07-12",
+        "location": "cname-shenanigans.md",
+        "author": "Justus",
+        "title": "Trouble with CNAME's"
+    },
+    {
+        "date": "2015-06-11",
+        "location": "schedule-planner.md",
+        "author": "Justus",
+        "title": "The Schedule Planner web-app is finally live"
+    },
+    {
+        "date": "2015-05-01",
+        "location": "monkey-patching.md",
+        "author": "Justus",
+        "title": "Next level monkey patching",
+        "description": "The dumb things you can(n't) do with python objects and classes"
+    },
+    {
+        "date": "2015-04-19",
+        "location": "sys.modules-is-dangerous.md",
+        "title": "(Re)Importing in python - don't touch sys.modules",
+        "author": "Justus"
+    },
+    {
+        "date": "2015-04-17",
+        "location": "new-logo.md",
+        "title": "A logo would be nice.",
+        "author": "Justus"
+    },
+    {
+        "date": "2015-04-17",
+        "location": "legal.md",
+        "title": "Legal stuff",
+        "author": "Justus"
+    },
+    {
+        "date": "2015-04-17",
+        "title": "A sweetass sidebar in Jekyll",
+        "author": "Justus",
+        "location": "a-sweetass-sidebar.md"
+    },
+    {
+        "date": "2015-04-16",
+        "location": "projects.md",
+        "title": "Projects again?",
+        "author": "Justus",
+        "description": "I'd like to have some information on my projects on this site. I have some ideas on how to do that."
+    }
+]

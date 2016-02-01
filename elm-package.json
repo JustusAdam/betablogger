@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "A one page blog in elm.",
-    "repository": "https://github.com/JustusAdam/elm-opb.git",
+    "summary": "My Blog as a one-page-app in elm.",
+    "repository": "https://github.com/JustusAdam/betablogger.git",
     "license": "MIT",
     "source-directories": [
         "src",

@@ -1,0 +1,8 @@
+[
+    "The schedule planner webapp is [live here](http://justus.science/schedule-planner-web/).",
+    "The [Markdown](http://daringfireball.net/projects/markdown/syntax) sources for this site are on [GitHub](https://github.com/JustusAdam/justusadam.github.io) and open for you to read, and submit improvement suggestions to.\n\nYou can also freely use any original content from this site, it is licensed under the [Creative Commons License](/legal/license.html).",
+    "If you happen to find a typo, spelling mistake or straight up false fact, you can simply submit a [pull request](//help.github.com/articles/using-pull-requests/) to [the repository](//github.com/JustusAdam/justusadam.github.io) to get it fixed.",
+    "I maintain several packages under my [account on Hackage][account], the Haskell package Database, which you can find [here][account] if you're interested in that.\n\n[hackage]: https://hackage.haskell.org\n[account]: https://hackage.haskell.org/user/justus\n[haskell-logo]: http://evenmere.org/~bts/haskell-logo/logo-0.svg",
+    "I have a [GitHub résumé][my-resume], which is a fun project creating résumés from GitHub statistics. Here's the a [link to the project itself][resume].\n\n[my-resume]: http://resume.github.io/?justusadam\n[resume]: https://github.com/resume/resume.github.com"
+    
+]
