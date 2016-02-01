@@ -7,16 +7,16 @@ import OnePageStack.Server exposing (..)
 import OnePageStack.Provider.Post exposing (postProvider)
 import OnePageStack.Provider.Index exposing (indexProvider)
 import OnePageStack.Template exposing (withTemplate)
-import Template exposing (template)
+import Template exposing (postTemplate, pageTemplate)
 
 -- MODEL
 
 providers : Providers
-providers = Dict.fromList [("post", withTemplate template (postProvider "test-data"))]
+providers = Dict.fromList [("post", withTemplate postTemplate (postProvider "test-data"))]
 
 main = serverOutput
 
 port locationIn : Signal String
 
 port tasks : Signal (Task String ())
-port tasks = server (withTemplate template <| indexProvider "test-data") providers <| currentLocation locationIn
+port tasks = server (withTemplate pageTemplate <| indexProvider "test-data") providers <| currentLocation locationIn

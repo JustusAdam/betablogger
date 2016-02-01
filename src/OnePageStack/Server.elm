@@ -26,6 +26,7 @@ handleRequest defaultProvider providers interface =
     `Task.andThen` (Signal.send interface.canvas << Page)
     `Task.onError` (Signal.send interface.canvas << PageNotFound << toString)
 
+
 view : Page -> Html
 view p =
   case p of
@@ -33,17 +34,22 @@ view p =
     PageNotFound message -> div [] [text "page unable to load due to: ", text message]
     Page p -> p
 
+
 contentHook : Signal.Mailbox Page
 contentHook = Signal.mailbox PageLoading
+
 
 locationChanger : Signal.Mailbox LocationChange
 locationChanger = Signal.mailbox Nothing
 
+
 interfaceSignal : Signal Url -> Signal AppInterface
 interfaceSignal = Signal.map (AppInterface contentHook.address locationChanger.address)
 
+
 server : Handler -> Providers -> Signal Url -> Signal (Task String ())
 server defaultProvider p = Signal.map (handleRequest defaultProvider p) << interfaceSignal
+
 
 currentLocation : Signal String -> Signal Url
 currentLocation = Signal.map2
@@ -56,6 +62,7 @@ currentLocation = Signal.map2
         Just q -> { url | query = q}
   )
   locationChanger.signal
+
 
 serverOutput : Signal Html
 serverOutput = Signal.map view contentHook.signal
