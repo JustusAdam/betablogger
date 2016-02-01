@@ -6,22 +6,30 @@ import OnePageStack.Types exposing (..)
 import OnePageStack.Provider.Util exposing (..)
 import Http
 import Html exposing (..)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Path.Url exposing ((</>))
 
 
-type alias PostMeta = { location : String, title : String, description : Maybe String }
+type alias PostMeta = 
+  { location : String
+  , title : String
+  , description : Maybe String 
+  }
 
 
 fetchIndex : String -> a -> Task String (List PostMeta)
-fetchIndex basePath _ = Task.mapError toString <| Http.get (Decode.list postMetaDecoder) <| basePath </> "index.json"
+fetchIndex basePath _ =
+  basePath </> "index.json"
+  |> Http.get (Decode.list postMetaDecoder)
+  |> Task.mapError toString
 
 
 renderIndex : Targeter -> (List PostMeta) -> Html
 renderIndex chgr =
-  ul []
+  ul [ style [("padding-left", "10px")] ]
     << List.map (\pm -> 
-        li [] 
+        li [ style [("list-style-type", "none"), ("padding", "0")]] 
           [ a [ onClick chgr (navigate "post" pm.location) ] 
               ([ h3 [] [text pm.title]]
               ++ case pm.description of

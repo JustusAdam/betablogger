@@ -7,7 +7,7 @@ import OnePageStack.Server exposing (..)
 import OnePageStack.Provider.Post exposing (postProvider)
 import OnePageStack.Provider.Index exposing (indexProvider)
 import OnePageStack.Template exposing (withTemplate)
-import Template exposing (postTemplate, pageTemplate)
+import Template exposing (postTemplate, pageTemplate, indexTemplate)
 
 -- MODEL
 
@@ -19,4 +19,4 @@ main = serverOutput
 port locationIn : Signal String
 
 port tasks : Signal (Task String ())
-port tasks = server (withTemplate pageTemplate <| indexProvider "test-data") providers <| currentLocation locationIn
+port tasks = server (withTemplate indexTemplate <| indexProvider "test-data") providers <| currentLocation locationIn
