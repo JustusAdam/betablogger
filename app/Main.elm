@@ -14,7 +14,7 @@ import Path.Url exposing ((</>))
 
 
 basePath : String
-basePath = "/betablogger/blog-data"
+basePath = "/blog-data"
 
 
 providers : Providers

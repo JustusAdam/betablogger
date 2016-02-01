@@ -12206,7 +12206,7 @@ Elm.Main.make = function (_elm) {
       return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _U.badPort("a string",v);
    });
    var main = $OnePageStack$Server.serverOutput;
-   var basePath = "/betablogger/blog-data";
+   var basePath = "/blog-data";
    var providers = $Dict.fromList(_U.list([{ctor: "_Tuple2"
                                            ,_0: "post"
                                            ,_1: A2($OnePageStack$Template.withTemplate,
