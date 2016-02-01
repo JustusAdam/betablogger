@@ -1,6 +1,7 @@
 [
   {
     "title": "Test 1",
-    "location": "test.md"
+    "location": "test.md",
+    "description": "A test post"
   }
 ]

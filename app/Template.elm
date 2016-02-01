@@ -15,7 +15,7 @@ sidebar : AcquireComponent
 sidebar = acquired <| div [] [text "hello sidebar"]
 
 
-headerStyle = [("top", "0"), ("width", "100%"), ("background-color", "black"), ("color", "white")]
+headerStyle = [("top", "0"), ("width", "100%"), ("background-color", "rgb(62, 62, 62)"), ("color", "white")]
 
 
 headerImpl : TemplateBuilder Html

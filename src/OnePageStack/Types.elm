@@ -11,7 +11,6 @@ type Page
   | PageNotFound String
 
 type alias LocationChange = Maybe Query
-type alias PostMeta = { location : String, title : String }
 type alias Targeter = Signal.Address LocationChange
 type alias ContentHook = Signal.Address Page
 type alias Handler = AppInterface -> Task String Html
