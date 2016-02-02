@@ -1,25 +1,29 @@
 @font-color: rgb(59, 59, 59);
+@header-color: rgb(56, 92, 139);
+@white-isch-color: rgb(245, 245, 245);
+@bright-grey: rgb(235, 235, 235);
 
 body {
   padding: 0;
   margin: 0;
   font-family: "Open Sans", sans-serif;
   color: @font-color;
+  background-color: @bright-grey;
 }
 
 .post-list {
-  padding-left: 10px;
+  padding-left: 0;
 
   .element {
     list-style-type: none;
     padding: 0;
-    margin: 0;
+    margin: 10px 30px;
     padding: 20px;
-    /*border-bottom: 1px solid rgb(149, 181, 228);*/
+    border-top: 1px solid darken(@bright-grey, 20%);;
 
-    /*&:nth-of-type(1) {
+    &:nth-of-type(1) {
       border-top: none;
-    }*/
+    }
 
     .description {
       font-weight: 100;
@@ -33,6 +37,10 @@ body {
 }
 
 .sidebar {
+
+  ul {
+    padding: 0;
+  }
   margin: 20px;
 
   font-size: small;
@@ -46,7 +54,7 @@ body {
 }
 
 .clearfix {
-  clear: fix;
+  clear: both;
 }
 
 footer {
@@ -64,10 +72,6 @@ footer {
   }
 }
 
-.center-horizontal {
-  left: center;
-}
-
 .center-block {
   width: 960px;
   margin-left:auto;
@@ -78,18 +82,30 @@ footer {
   position: relative;
 }
 
-header {
+.top-bar {
   position: fixed;
   top: 0;
   width: 100%;
-  background-color: rgba(9, 9, 9, 0.72);
-  color: white;
 
   .wrapper {
-    padding: 10px 15px;
+    padding: 15px 15px;
   }
 }
 
-.page-container {
-  margin-top: 40px;
+.main-content {
+  float: left;
+  width: 75%;
+  background-color: @white-isch-color;
+  box-shadow: 0 5px 5px darken(@white-isch-color, 30%);
+}
+
+.top-bar, header {
+  background-color: @header-color;
+  color: @white-isch-color;
+  border-bottom: 1px solid darken(@header-color, 10%);
+}
+
+header {
+  padding: 60px 20px;
+  margin-top: 2 * 15px + 1em;
 }

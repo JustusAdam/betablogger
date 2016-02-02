@@ -47,7 +47,7 @@ headerImpl =
               |> .query
   in
     return <|
-      header [ ]
+      div [ class "top-bar" ]
         [ div [ class "wrapper" ]
             [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
         ]
@@ -60,13 +60,14 @@ footerBlock inner =
     [ div [ class "inner" ] inner ]
 
 
-pageTemplate : Template
-pageTemplate =
-  headerImpl `T.andThen` \header ->
+pageTemplate : String -> Template
+pageTemplate title' =
+  headerImpl `T.andThen` \header' ->
   render <| \main ->
   div
     [ class "page-container" ]
-    [ header
+    [ header'
+    , header [] [ div [ class "center-block" ] [ h1 [] [ text title' ] ] ]
     , div [ class "center-block" ]
       [ main ]
     , clearfix
@@ -83,9 +84,9 @@ pageTemplate =
     ]
 
 
-postTemplate : Template
-postTemplate =
-  pageTemplate `nest` render (\main ->
+postTemplate : String -> Template
+postTemplate title' =
+  pageTemplate title' `nest` render (\main ->
     div []
       [ section []
         [ main ]
@@ -93,16 +94,17 @@ postTemplate =
   )
 
 
-indexTemplate : String -> Template
-indexTemplate basePath =
+indexTemplate : String -> String -> Template
+indexTemplate basePath title' =
   acquire (sidebar basePath) `T.andThen` \sb ->
-  pageTemplate `nest`
+  pageTemplate title' `nest`
     render (\main ->
         div []
-          [ section [ style [ "float" := "left", "width" := "66%" ] ] [ main ]
-          , div [ style [ "float" := "left", "width" := "33%" ] ]
+          [ section [ class "main-content" ] [ main ]
+          , div [ style [ "float" := "left", "width" := "25%" ] ]
             [ div [ class "sidebar" ]
-              <| (\a -> [a]) <| withDefault (text "no sidebar") sb
+              (h3 [] [ text "\"News\"" ]
+              :: singleton (withDefault (text "no sidebar") sb))
             ]
           , clearfix
           ])

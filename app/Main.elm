@@ -18,15 +18,15 @@ basePath = "blog-data"
 
 
 providers : Providers
-providers = Dict.fromList [("post", withTemplate postTemplate (postProvider (basePath </> "posts")))]
+providers = Dict.fromList [("post", withTemplate (postTemplate "") (postProvider (basePath </> "posts")))]
 
 main = serverOutput
 
 port locationIn : Signal String
 
 port tasks : Signal (Task String ())
-port tasks = 
-  server 
-    (withTemplate (indexTemplate basePath) <| indexProvider basePath) 
-    providers 
+port tasks =
+  server
+    (withTemplate (indexTemplate basePath "Welcome to my Blog") <| indexProvider basePath)
+    providers
     (currentLocation locationIn)
