@@ -41,6 +41,7 @@ renderIndex chgr =
                     Just d -> [p [] [text d]] 
                 )
             ])
+    >> List.intersperse (li [style [("list-style-type", "none"), ("padding", "0")]] [hr [] []])
     >> ul [ style [("padding-left", "10px")] ] 
 
 indexProvider : String -> Handler
