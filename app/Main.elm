@@ -26,7 +26,7 @@ port locationIn : Signal String
 
 port tasks : Signal (Task String ())
 port tasks = 
-    server 
+  server 
     (withTemplate (indexTemplate basePath) <| indexProvider basePath) 
     providers 
     (currentLocation locationIn)
