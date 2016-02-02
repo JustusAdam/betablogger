@@ -65,7 +65,7 @@ pageTemplate =
   headerImpl `T.andThen` \header ->
   render <| \main ->
   div
-    []
+    [ class "page-container" ]
     [ header
     , div [ class "center-block" ]
       [ main ]

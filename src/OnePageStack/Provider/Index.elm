@@ -33,15 +33,15 @@ renderIndex chgr =
   List.sortBy (Date.toTime << .date)
   >> List.reverse
   >> List.map (\pm ->
-          li [ class "post-list" ]
+          li [ class "element" ]
             [ a [ onClick chgr (navigate "post" pm.location)]
                 ([ h3 [] [text pm.title]]
                 ++ case pm.description of
                     Nothing -> []
-                    Just d -> [p [] [text d]]
+                    Just d -> [p [ class "description" ] [text d]]
                 )
             ])
-    -- >> List.intersperse (li [class "post-separator"] [hr [] []])
+    -- >> List.intersperse (li [class "separator"] [])
     >> ul [ class "post-list" ]
 
 indexProvider : String -> Handler

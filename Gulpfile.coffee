@@ -2,20 +2,10 @@ gulp = require 'gulp'
 elm = require 'gulp-elm'
 
 gulp.task 'css', ->
-    postcss    = require('gulp-postcss')
-    sourcemaps = require('gulp-sourcemaps')
-
-    gulp.src('css/*.css')
-        .pipe( sourcemaps.init() )
-        .pipe( postcss(
-          [ require('autoprefixer')
-          , require('precss')
-          , require('postcss-font-magician')
-          , require('postcss-center')
-          , require 'postcss-clearfix'
-          ]) )
-        .pipe( sourcemaps.write('.') )
-        .pipe( gulp.dest('dist/css/') )
+    less    = require('gulp-less')
+    gulp.src('./less/main.less')
+      .pipe(less())
+      .pipe(gulp.dest('./dist/css'))
 
 
 gulp.task 'elm-init', elm.init
