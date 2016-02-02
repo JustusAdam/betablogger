@@ -7,7 +7,13 @@ gulp.task 'css', ->
 
     gulp.src('css/*.css')
         .pipe( sourcemaps.init() )
-        .pipe( postcss([ require('autoprefixer'), require('precss') ]) )
+        .pipe( postcss(
+          [ require('autoprefixer')
+          , require('precss')
+          , require('postcss-font-magician')
+          , require('postcss-center')
+          , require 'postcss-clearfix'
+          ]) )
         .pipe( sourcemaps.write('.') )
         .pipe( gulp.dest('dist/css/') )
 

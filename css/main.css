@@ -1,5 +1,77 @@
 body {
-      padding: 0;
-      margin: 0;
-      font-family: "Open Sans", 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  padding: 0;
+  margin: 0;
+  font-family: "Open Sans", sans-serif;
+  color: rgb(59, 59, 59);
+}
+
+
+li.post-list, .post-separator {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul.post-list {
+  padding-left: 10px;
+}
+
+.post-list {
+    h3 {
+      color : rgb(32, 154, 232);
     }
+}
+
+.sidebar {
+  margin: 20px;
+
+  font-size: small;
+
+  li {
+    list-style-type: none;
+    margin: none;
+  }
+}
+
+.clearfix {
+  clear: fix;
+}
+
+footer {
+  margin: 20px;
+  border: 1px solid rgb(233, 233, 233);
+}
+
+.footer-block {
+  width : 33%;
+  float : left;
+
+  > .inner {
+    margin : 15px 15px;
+    float: none;
+  }
+}
+
+.center-horizontal {
+  left: center;
+}
+
+.center-block {
+  width: 960px;
+  margin-left:auto;
+  margin-right: auto;
+}
+
+.heading-wrapper {
+  position: relative;
+}
+
+header {
+  top: 0;
+  width: 100%;
+  background-color: rgb(62, 62, 62);
+  color:white;
+
+  .wrapper {
+    padding: 10px 15px;
+  }
+}

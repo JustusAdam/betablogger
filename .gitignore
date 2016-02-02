@@ -1,5 +1,4 @@
 elm-stuff/
-*.js
 .DS_Store
 node_modules/
 dist/
