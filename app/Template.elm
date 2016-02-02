@@ -88,7 +88,7 @@ postTemplate : String -> Template
 postTemplate title' =
   pageTemplate title' `nest` render (\main ->
     div []
-      [ section []
+      [ article []
         [ main ]
       ]
   )
