@@ -11513,13 +11513,28 @@ Elm.OnePageStack.Provider.Util.make = function (_elm) {
    });
    var mkProvider = F3(function (fetchTask,renderer,$interface) {
       var url = $interface.currentUrl;
-      return A2($Task.andThen,
-      $History.setPath($Erl.toString(url)),
-      function (_p0) {
-         return A2($Task.andThen,fetchTask(url.query),function (_p1) {    return $Task.succeed(A2(renderer,$interface.navigator,_p1));});
-      });
+      return A2($Task.andThen,$History.setPath($Erl.toString(url)),function (_p0) {    return A2($Task.andThen,fetchTask($interface),renderer($interface));});
    });
    return _elm.OnePageStack.Provider.Util.values = {_op: _op,mkProvider: mkProvider,navigate: navigate,withTemplate: withTemplate};
+};
+Elm.OnePageStack = Elm.OnePageStack || {};
+Elm.OnePageStack.Provider = Elm.OnePageStack.Provider || {};
+Elm.OnePageStack.Provider.make = function (_elm) {
+   "use strict";
+   _elm.OnePageStack = _elm.OnePageStack || {};
+   _elm.OnePageStack.Provider = _elm.OnePageStack.Provider || {};
+   if (_elm.OnePageStack.Provider.values) return _elm.OnePageStack.Provider.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $OnePageStack$Provider$Util = Elm.OnePageStack.Provider.Util.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var mkProvider = $OnePageStack$Provider$Util.mkProvider;
+   return _elm.OnePageStack.Provider.values = {_op: _op,mkProvider: mkProvider};
 };
 Elm.Path = Elm.Path || {};
 Elm.Path.Generic = Elm.Path.Generic || {};
@@ -11794,24 +11809,20 @@ Elm.OnePageStack.Provider.Post.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Markdown = Elm.Markdown.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $OnePageStack$Provider$Util = Elm.OnePageStack.Provider.Util.make(_elm),
-   $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
-   var renderPost = function (_p0) {    return $Markdown.toHtml;};
    var fetchPost = F2(function (basePath,params) {
-      var _p1 = A2($Dict.get,"page",params);
-      if (_p1.ctor === "Nothing") {
+      var _p0 = A2($Dict.get,"page",params);
+      if (_p0.ctor === "Nothing") {
             return $Task.fail("No page specified");
          } else {
-            return A2($Task.mapError,$Basics.toString,$Http.getString(A2($Path$Url._op["</>"],basePath,_p1._0)));
+            return A2($Task.mapError,$Basics.toString,A2($Task.map,$Markdown.toHtml,$Http.getString(A2($Path$Url._op["</>"],basePath,_p0._0))));
          }
    });
-   var postProvider = function (basePath) {    return A2($OnePageStack$Provider$Util.mkProvider,fetchPost(basePath),renderPost);};
-   return _elm.OnePageStack.Provider.Post.values = {_op: _op,postProvider: postProvider};
+   return _elm.OnePageStack.Provider.Post.values = {_op: _op,fetchPost: fetchPost};
 };
 Elm.Native.Date = {};
 Elm.Native.Date.make = function(localRuntime) {
@@ -11936,44 +11947,16 @@ Elm.OnePageStack.Provider.Index.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
    $Http = Elm.Http.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $OnePageStack$Provider$Util = Elm.OnePageStack.Provider.Util.make(_elm),
    $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
-   var renderIndex = function (chgr) {
-      return function (_p0) {
-         return A2($Html.ul,
-         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "padding-left",_1: "10px"}]))]),
-         A2($List.map,
-         function (pm) {
-            return A2($Html.li,
-            _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "list-style-type",_1: "none"},{ctor: "_Tuple2",_0: "padding",_1: "0"}]))]),
-            _U.list([A2($Html.a,
-            _U.list([A2($Html$Events.onClick,chgr,A2($OnePageStack$Provider$Util.navigate,"post",pm.location))]),
-            A2($Basics._op["++"],
-            _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text(pm.title)]))]),
-            function () {
-               var _p1 = pm.description;
-               if (_p1.ctor === "Nothing") {
-                     return _U.list([]);
-                  } else {
-                     return _U.list([A2($Html.p,_U.list([]),_U.list([$Html.text(_p1._0)]))]);
-                  }
-            }()))]));
-         },
-         $List.reverse(A2($List.sortBy,function (_p2) {    return $Date.toTime(function (_) {    return _.date;}(_p2));},_p0))));
-      };
-   };
    var PostMeta = F4(function (a,b,c,d) {    return {location: a,title: b,description: c,date: d};});
    var postMetaDecoder = A5($Json$Decode.object4,
    PostMeta,
@@ -11983,64 +11966,17 @@ Elm.OnePageStack.Provider.Index.make = function (_elm) {
    A2($Json$Decode.andThen,
    A2($Json$Decode._op[":="],"date",$Json$Decode.string),
    function (s) {
-      var _p3 = $Date.fromString(s);
-      if (_p3.ctor === "Err") {
-            return $Json$Decode.fail(_p3._0);
+      var _p0 = $Date.fromString(s);
+      if (_p0.ctor === "Err") {
+            return $Json$Decode.fail(_p0._0);
          } else {
-            return $Json$Decode.succeed(_p3._0);
+            return $Json$Decode.succeed(_p0._0);
          }
    }));
-   var fetchIndex = F2(function (basePath,_p4) {
+   var fetchIndex = F2(function (basePath,_p1) {
       return A2($Task.mapError,$Basics.toString,A2($Http.get,$Json$Decode.list(postMetaDecoder),A2($Path$Url._op["</>"],basePath,"posts.json")));
    });
-   var indexProvider = function (basePath) {    return A2($OnePageStack$Provider$Util.mkProvider,fetchIndex(basePath),renderIndex);};
-   return _elm.OnePageStack.Provider.Index.values = {_op: _op,indexProvider: indexProvider};
-};
-Elm.OnePageStack = Elm.OnePageStack || {};
-Elm.OnePageStack.Template = Elm.OnePageStack.Template || {};
-Elm.OnePageStack.Template.make = function (_elm) {
-   "use strict";
-   _elm.OnePageStack = _elm.OnePageStack || {};
-   _elm.OnePageStack.Template = _elm.OnePageStack.Template || {};
-   if (_elm.OnePageStack.Template.values) return _elm.OnePageStack.Template.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Dict = Elm.Dict.make(_elm),
-   $Erl = Elm.Erl.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var withTemplate = F3(function (t,f,i) {    return A2($Task.andThen,f(i),t(i));});
-   var acquired = F2(function (html,_p0) {    return A2($Task.mapError,$Basics.toString,$Task.succeed($Maybe.Just(html)));});
-   var $return = F3(function (a,_p2,_p1) {    return $Task.succeed(a);});
-   var render = F3(function (a,_p3,h) {    return $Task.succeed(a(h));});
-   var andThen = F4(function (ta,f,i,html) {    return A2($Task.andThen,A2(ta,i,html),function (a) {    return A3(f,a,i,html);});});
-   var map = F4(function (f,tb,i,h) {    return A2($Task.map,f,A2(tb,i,h));});
-   var getInterface = F2(function (i,_p4) {    return $Task.succeed(i);});
-   var getUrl = A2(map,function (_) {    return _.currentUrl;},getInterface);
-   var acquire = function (component) {    return A2(andThen,getUrl,F3(function (url,_p6,_p5) {    return component(url);}));};
-   var getNavigator = A2(map,function (_) {    return _.navigator;},getInterface);
-   var getCanvas = A2(map,function (_) {    return _.canvas;},getInterface);
-   var nest = F4(function (outer,inner,$interface,content) {    return A2($Task.andThen,A2(inner,$interface,content),outer($interface));});
-   return _elm.OnePageStack.Template.values = {_op: _op
-                                              ,nest: nest
-                                              ,getInterface: getInterface
-                                              ,acquire: acquire
-                                              ,getUrl: getUrl
-                                              ,getNavigator: getNavigator
-                                              ,getCanvas: getCanvas
-                                              ,map: map
-                                              ,andThen: andThen
-                                              ,render: render
-                                              ,$return: $return
-                                              ,acquired: acquired
-                                              ,withTemplate: withTemplate};
+   return _elm.OnePageStack.Provider.Index.values = {_op: _op,fetchIndex: fetchIndex,PostMeta: PostMeta};
 };
 Elm.Util = Elm.Util || {};
 Elm.Util.make = function (_elm) {
@@ -12069,6 +12005,7 @@ Elm.Template.make = function (_elm) {
    if (_elm.Template.values) return _elm.Template.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Erl = Elm.Erl.make(_elm),
    $Html = Elm.Html.make(_elm),
@@ -12079,103 +12016,130 @@ Elm.Template.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Markdown = Elm.Markdown.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $OnePageStack$Template = Elm.OnePageStack.Template.make(_elm),
+   $OnePageStack$Provider$Index = Elm.OnePageStack.Provider.Index.make(_elm),
+   $OnePageStack$Provider$Util = Elm.OnePageStack.Provider.Util.make(_elm),
+   $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Task = Elm.Task.make(_elm),
    $Util = Elm.Util.make(_elm);
    var _op = {};
-   _op[":="] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
-   var headerStyle = _U.list([A2(_op[":="],"top","0")
-                             ,A2(_op[":="],"width","100%")
-                             ,A2(_op[":="],"background-color","rgb(62, 62, 62)")
-                             ,A2(_op[":="],"color","white")]);
-   var headerImpl = A2($OnePageStack$Template.andThen,
-   $OnePageStack$Template.getInterface,
-   function (_p0) {
+   var IndexTemplateData = F2(function (a,b) {    return {sidebar: a,pageInformation: b};});
+   var footerBlock = function (inner) {
+      return A2($Html.div,_U.list([$Html$Attributes.$class("footer-block")]),_U.list([A2($Html.div,_U.list([$Html$Attributes.$class("inner")]),inner)]));
+   };
+   var headerImpl = function (_p0) {
       var _p1 = _p0;
       var query_ = function (_) {    return _.query;}(A2($Erl.removeQuery,"type",A2($Erl.removeQuery,"page",_p1.currentUrl)));
-      return $OnePageStack$Template.$return(A2($Html.header,
-      _U.list([$Html$Attributes.style(headerStyle)]),
-      _U.list([A2($Html.div,
-      _U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"padding","10px 15px")]))]),
-      _U.list([A2($Html.a,_U.list([A2($Html$Events.onClick,_p1.navigator,$Maybe.Just(query_))]),_U.list([$Html.text("Justus\'s homepage v3.0")]))]))])));
-   });
-   var footerBlock = function (inner) {
       return A2($Html.div,
-      _U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"width","33%"),A2(_op[":="],"float","left")]))]),
-      _U.list([A2($Html.div,_U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"margin","15px 15px")]))]),inner)]));
+      _U.list([$Html$Attributes.$class("top-bar")]),
+      _U.list([A2($Html.div,
+      _U.list([$Html$Attributes.$class("wrapper")]),
+      _U.list([A2($Html.a,_U.list([A2($Html$Events.onClick,_p1.navigator,$Maybe.Just(query_))]),_U.list([$Html.text("Justus\'s homepage v3.0")]))]))]));
    };
-   var centerBlock = _U.list([A2(_op[":="],"width","960px"),A2(_op[":="],"margin-left","auto"),A2(_op[":="],"margin-right","auto")]);
-   var pageTemplate = A2($OnePageStack$Template.andThen,
-   headerImpl,
-   function (header) {
-      return $OnePageStack$Template.render(function (main) {
-         return A2($Html.div,
-         _U.list([]),
-         _U.list([header
-                 ,A2($Html.div,_U.list([$Html$Attributes.style(centerBlock)]),_U.list([main]))
-                 ,A2($Html.footer,
-                 _U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"margin","20px"),A2(_op[":="],"border","1px solid rgb(233, 233, 233)")]))]),
-                 _U.list([A2($Html.div,
-                 _U.list([$Html$Attributes.style(centerBlock)]),
-                 _U.list([footerBlock(_U.list([$Html.text("This site is built with the wonderful ")
-                                              ,A2($Html.a,_U.list([$Html$Attributes.href("http://elm-lang.org")]),_U.list([$Html.text("Elm")]))
-                                              ,$Html.text(" language")]))
-                         ,footerBlock(_U.list([$Html.text("")]))
-                         ,footerBlock(_U.list([$Html.text("©️ 2016 Justus Adam")]))]))]))]));
-      });
-   });
-   var postTemplate = A2($OnePageStack$Template.nest,
-   pageTemplate,
-   $OnePageStack$Template.render(function (main) {    return A2($Html.div,_U.list([]),_U.list([A2($Html.section,_U.list([]),_U.list([main]))]));}));
-   var sidebar = F2(function (basePath,_p2) {
+   var sidebar = function (basePath) {
       return A2($Task.mapError,
       $Basics.toString,
       A2($Task.map,
-      function (_p3) {
-         return $Maybe.Just(A2($Html.ul,
-         _U.list([]),
-         A2($List.map,
-         function (_p4) {
-            return A2($Html.li,
-            _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "list-style-type",_1: "none"},{ctor: "_Tuple2",_0: "margin",_1: "none"}]))]),
-            $Util.singleton($Markdown.toHtml(_p4)));
-         },
-         _p3)));
+      function (_p2) {
+         return A2($Html.ul,_U.list([]),A2($List.map,function (_p3) {    return A2($Html.li,_U.list([]),$Util.singleton($Markdown.toHtml(_p3)));},_p2));
       },
       A2($Http.get,$Json$Decode.list($Json$Decode.string),A2($Path$Url._op["</>"],basePath,"sidebar.json"))));
-   });
-   var indexTemplate = function (basePath) {
-      return A2($OnePageStack$Template.andThen,
-      $OnePageStack$Template.acquire(sidebar(basePath)),
-      function (sb) {
-         return A2($OnePageStack$Template.nest,
-         pageTemplate,
-         $OnePageStack$Template.render(function (main) {
-            return A2($Html.div,
-            _U.list([]),
-            _U.list([A2($Html.section,_U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"float","left"),A2(_op[":="],"width","66%")]))]),_U.list([main]))
-                    ,A2($Html.div,
-                    _U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"float","left"),A2(_op[":="],"width","33%")]))]),
-                    _U.list([A2($Html.div,
-                    _U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"margin","20px")]))]),
-                    function (a) {
-                       return _U.list([a]);
-                    }(A2($Maybe.withDefault,$Html.text("no sidebar"),sb)))]))
-                    ,A2($Html.div,_U.list([$Html$Attributes.style(_U.list([A2(_op[":="],"clear","both")]))]),_U.list([]))]));
-         }));
-      });
    };
+   var clearfix = A2($Html.div,_U.list([$Html$Attributes.$class("clearfix")]),_U.list([]));
+   var pageTemplate = function (_p4) {
+      var _p5 = _p4;
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("page-container")]),
+      A2($List._op["::"],
+      headerImpl(_p5.$interface),
+      A2($Basics._op["++"],
+      function () {
+         var _p6 = _p5.title;
+         if (_p6.ctor === "Just") {
+               return _U.list([A2($Html.header,
+               _U.list([]),
+               _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("center-block")]),_U.list([A2($Html.h1,_U.list([]),_U.list([$Html.text(_p6._0)]))]))]))]);
+            } else {
+               return _U.list([]);
+            }
+      }(),
+      _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("center-block")]),_U.list([_p5.content]))
+              ,clearfix
+              ,A2($Html.footer,
+              _U.list([]),
+              _U.list([A2($Html.div,
+              _U.list([$Html$Attributes.$class("center-block")]),
+              _U.list([footerBlock(_U.list([$Html.text("This site is built with the wonderful ")
+                                           ,A2($Html.a,_U.list([$Html$Attributes.href("http://elm-lang.org")]),_U.list([$Html.text("Elm")]))
+                                           ,$Html.text(" language")]))
+                      ,footerBlock(_U.list([$Html.text("")]))
+                      ,footerBlock(_U.list([$Html.text("©️ 2016 Justus Adam")]))]))]))]))));
+   };
+   var postTemplate = function (pi) {
+      var _p7 = pi;
+      var content = _p7.content;
+      var newContent = A2($Html.div,_U.list([]),_U.list([A2($Html.article,_U.list([]),_U.list([content]))]));
+      return pageTemplate(_U.update(pi,{content: newContent}));
+   };
+   var renderPost = F2(function (i,c) {    return $Task.succeed(postTemplate({content: c,$interface: i,title: $Maybe.Nothing}));});
+   var indexTemplate = function (_p8) {
+      var _p9 = _p8;
+      var _p10 = _p9.pageInformation;
+      var newContent = A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Html.section,_U.list([$Html$Attributes.$class("main-content")]),_U.list([_p10.content]))
+              ,A2($Html.div,
+              _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "float",_1: "left"},{ctor: "_Tuple2",_0: "width",_1: "25%"}]))]),
+              _U.list([A2($Html.div,
+              _U.list([$Html$Attributes.$class("sidebar")]),
+              _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text("\"News\"")])),_p9.sidebar]))]))
+              ,clearfix]));
+      return pageTemplate(_U.update(_p10,{content: newContent}));
+   };
+   var renderIndex = F3(function (basePath,i,postData) {
+      var _p11 = i;
+      var navigator = _p11.navigator;
+      var content = A2($Html.ul,
+      _U.list([$Html$Attributes.$class("post-list")]),
+      A2($List.map,
+      function (pm) {
+         return A2($Html.li,
+         _U.list([$Html$Attributes.$class("element")]),
+         _U.list([A2($Html.a,
+         _U.list([A2($Html$Events.onClick,navigator,A2($OnePageStack$Provider$Util.navigate,"post",pm.location))]),
+         A2($Basics._op["++"],
+         _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text(pm.title)]))]),
+         function () {
+            var _p12 = pm.description;
+            if (_p12.ctor === "Nothing") {
+                  return _U.list([]);
+               } else {
+                  return _U.list([A2($Html.p,_U.list([$Html$Attributes.$class("description")]),_U.list([$Html.text(_p12._0)]))]);
+               }
+         }()))]));
+      },
+      $List.reverse(A2($List.sortBy,function (_p13) {    return $Date.toTime(function (_) {    return _.date;}(_p13));},postData))));
+      return A3($Basics.flip,
+      $Task.map,
+      sidebar(basePath),
+      function (sb) {
+         return indexTemplate({sidebar: sb,pageInformation: {title: $Maybe.Just("Welcome to my blog"),$interface: i,content: content}});
+      });
+   });
+   var PageInformation = F3(function (a,b,c) {    return {$interface: a,title: b,content: c};});
    return _elm.Template.values = {_op: _op
+                                 ,PageInformation: PageInformation
+                                 ,clearfix: clearfix
+                                 ,renderIndex: renderIndex
+                                 ,renderPost: renderPost
                                  ,sidebar: sidebar
-                                 ,headerStyle: headerStyle
                                  ,headerImpl: headerImpl
                                  ,footerBlock: footerBlock
-                                 ,centerBlock: centerBlock
                                  ,pageTemplate: pageTemplate
                                  ,postTemplate: postTemplate
+                                 ,IndexTemplateData: IndexTemplateData
                                  ,indexTemplate: indexTemplate};
 };
 Elm.Main = Elm.Main || {};
@@ -12189,10 +12153,10 @@ Elm.Main.make = function (_elm) {
    $Dict = Elm.Dict.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
+   $OnePageStack$Provider = Elm.OnePageStack.Provider.make(_elm),
    $OnePageStack$Provider$Index = Elm.OnePageStack.Provider.Index.make(_elm),
    $OnePageStack$Provider$Post = Elm.OnePageStack.Provider.Post.make(_elm),
    $OnePageStack$Server = Elm.OnePageStack.Server.make(_elm),
-   $OnePageStack$Template = Elm.OnePageStack.Template.make(_elm),
    $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
    $Result = Elm.Result.make(_elm),
@@ -12206,16 +12170,19 @@ Elm.Main.make = function (_elm) {
       return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _U.badPort("a string",v);
    });
    var main = $OnePageStack$Server.serverOutput;
+   var postProvider = function (basePath) {
+      return A2($OnePageStack$Provider.mkProvider,
+      function (_p0) {
+         return A2($OnePageStack$Provider$Post.fetchPost,basePath,function (_) {    return _.query;}(function (_) {    return _.currentUrl;}(_p0)));
+      },
+      $Template.renderPost);
+   };
+   var indexProvider = function (basePath) {
+      return A2($OnePageStack$Provider.mkProvider,$OnePageStack$Provider$Index.fetchIndex(basePath),$Template.renderIndex(basePath));
+   };
    var basePath = "/blog-data";
-   var providers = $Dict.fromList(_U.list([{ctor: "_Tuple2"
-                                           ,_0: "post"
-                                           ,_1: A2($OnePageStack$Template.withTemplate,
-                                           $Template.postTemplate,
-                                           $OnePageStack$Provider$Post.postProvider(A2($Path$Url._op["</>"],basePath,"posts")))}]));
+   var providers = $Dict.fromList(_U.list([{ctor: "_Tuple2",_0: "post",_1: postProvider(A2($Path$Url._op["</>"],basePath,"posts"))}]));
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",
-   A3($OnePageStack$Server.server,
-   A2($OnePageStack$Template.withTemplate,$Template.indexTemplate(basePath),$OnePageStack$Provider$Index.indexProvider(basePath)),
-   providers,
-   $OnePageStack$Server.currentLocation(locationIn)));
-   return _elm.Main.values = {_op: _op,basePath: basePath,providers: providers,main: main};
+   A3($OnePageStack$Server.server,indexProvider(basePath),providers,$OnePageStack$Server.currentLocation(locationIn)));
+   return _elm.Main.values = {_op: _op,basePath: basePath,indexProvider: indexProvider,postProvider: postProvider,providers: providers,main: main};
 };
