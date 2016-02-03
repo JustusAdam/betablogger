@@ -1,4 +1,4 @@
-module OnePageStack.Provider.Post (postProvider) where
+module OnePageStack.Provider.Post (fetchPost) where
 
 import Task exposing (Task)
 import Html exposing (Html)
@@ -14,14 +14,11 @@ import Path.Url exposing ((</>))
 type alias Post = String
 
 
-fetchPost : String -> Query -> Task String String
+fetchPost : String -> Query -> Task String Html
 fetchPost basePath params =
   case Dict.get "page" params of
     Nothing -> Task.fail "No page specified"
-    Just page -> Task.mapError toString <| Http.getString (basePath </> page)
-
-renderPost : a -> Post -> Html
-renderPost _ = Markdown.toHtml
-
-postProvider : String -> Handler
-postProvider basePath = mkProvider (fetchPost basePath) renderPost
+    Just page ->
+      Http.getString (basePath </> page)
+      |> Task.map Markdown.toHtml
+      |> Task.mapError toString

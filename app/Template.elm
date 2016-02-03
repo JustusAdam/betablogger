@@ -1,7 +1,6 @@
 module Template where
 
 
-import OnePageStack.Template as T exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -14,13 +13,60 @@ import Task
 import Markdown
 import Json.Decode as Decode
 import Util exposing (singleton)
+import OnePageStack.Types exposing (..)
+import OnePageStack.Provider.Index exposing (PostMeta)
+import OnePageStack.Provider.Util exposing (navigate)
+import Date
+
+
+type alias PageInformation =
+  { interface : AppInterface
+  , title : Maybe String
+  , content : Html
+  }
 
 
 clearfix = div [class "clearfix"] []
 
 
-sidebar : String -> AcquireComponent
-sidebar basePath _ =
+renderIndex : String -> AppInterface -> (List PostMeta) -> Task.Task String Html
+renderIndex basePath i postData =
+  let
+    {navigator} = i
+    content =
+      postData
+      |> List.sortBy (Date.toTime << .date)
+      |> List.reverse
+      |> List.map (\pm ->
+              li [ class "element" ]
+                [ a [ onClick navigator (navigate "post" pm.location)]
+                    ([ h3 [] [text pm.title]]
+                    ++ case pm.description of
+                        Nothing -> []
+                        Just d -> [p [ class "description" ] [text d]]
+                    )
+                ])
+        -- >> List.intersperse (li [class "separator"] [])
+      |> ul [ class "post-list" ]
+  in
+    flip Task.map (sidebar basePath) <| \sb ->
+      indexTemplate
+        { sidebar = sb
+        , pageInformation =
+          { title = Just "Welcome to my blog"
+          , interface = i
+          , content = content
+          }
+        }
+
+
+renderPost : AppInterface -> Html -> Task.Task String Html
+renderPost i c = Task.succeed <|
+  postTemplate { content = c, interface = i, title = Nothing }
+
+
+sidebar : String -> Task.Task String Html
+sidebar basePath =
   Http.get (Decode.list Decode.string) (basePath </> "sidebar.json")
   |> Task.map
       (List.map (
@@ -28,29 +74,22 @@ sidebar basePath _ =
         >> singleton
         >> li []
         )
-      >> ul []
-      >> Just)
+      >> ul [])
   |> Task.mapError toString
 
 
-
-(:=) = (,)
-
-
-headerImpl : TemplateBuilder Html
-headerImpl =
-  getInterface `T.andThen` \{navigator, currentUrl} ->
+headerImpl : AppInterface -> Html
+headerImpl {navigator, currentUrl} =
   let
     query_ = currentUrl
               |> Erl.removeQuery "page"
               |> Erl.removeQuery "type"
               |> .query
   in
-    return <|
-      div [ class "top-bar" ]
-        [ div [ class "wrapper" ]
-            [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
-        ]
+    div [ class "top-bar" ]
+      [ div [ class "wrapper" ]
+          [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
+      ]
 
 
 
@@ -60,16 +99,17 @@ footerBlock inner =
     [ div [ class "inner" ] inner ]
 
 
-pageTemplate : String -> Template
-pageTemplate title' =
-  headerImpl `T.andThen` \header' ->
-  render <| \main ->
+pageTemplate : PageInformation -> Html
+pageTemplate { interface, title, content } =
   div
     [ class "page-container" ]
-    [ header'
-    , header [] [ div [ class "center-block" ] [ h1 [] [ text title' ] ] ]
-    , div [ class "center-block" ]
-      [ main ]
+    <| headerImpl interface
+    :: (case title of
+          Just t -> [header [] [ div [ class "center-block" ] [ h1 [] [ text t ] ] ]]
+          Nothing -> [])
+    ++
+    [ div [ class "center-block" ]
+      [ content ]
     , clearfix
     , footer []
       [ div [ class "center-block" ]
@@ -84,27 +124,38 @@ pageTemplate title' =
     ]
 
 
-postTemplate : String -> Template
-postTemplate title' =
-  pageTemplate title' `nest` render (\main ->
-    div []
-      [ article []
-        [ main ]
-      ]
-  )
+postTemplate : PageInformation -> Html
+postTemplate pi =
+  let
+    { content } = pi
+    newContent =
+      div []
+        [ article []
+          [ content ]
+        ]
+  in
+    pageTemplate { pi | content = newContent }
 
 
-indexTemplate : String -> String -> Template
-indexTemplate basePath title' =
-  acquire (sidebar basePath) `T.andThen` \sb ->
-  pageTemplate title' `nest`
-    render (\main ->
-        div []
-          [ section [ class "main-content" ] [ main ]
-          , div [ style [ "float" := "left", "width" := "25%" ] ]
-            [ div [ class "sidebar" ]
-              (h3 [] [ text "\"News\"" ]
-              :: singleton (withDefault (text "no sidebar") sb))
+type alias IndexTemplateData =
+  { sidebar : Html
+  , pageInformation : PageInformation
+  }
+
+
+indexTemplate : IndexTemplateData -> Html
+indexTemplate { sidebar, pageInformation } =
+  let
+    newContent =
+      div []
+        [ section [ class "main-content" ] [ pageInformation.content ]
+        , div [ style [ ("float", "left"), ("width", "25%") ] ]
+          [ div [ class "sidebar" ]
+            [ h3 [] [ text "\"News\"" ]
+            , sidebar
             ]
-          , clearfix
-          ])
+          ]
+        , clearfix
+        ]
+  in
+    pageTemplate { pageInformation | content = newContent}

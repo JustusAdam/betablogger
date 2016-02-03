@@ -1,13 +1,10 @@
-module OnePageStack.Provider.Index (indexProvider) where
+module OnePageStack.Provider.Index (fetchIndex, PostMeta) where
 
 import Task exposing (Task)
 import Json.Decode as Decode exposing ((:=))
 import OnePageStack.Types exposing (..)
 import OnePageStack.Provider.Util exposing (..)
 import Http
-import Html exposing (..)
-import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
 import Path.Url exposing ((</>))
 import Date exposing (Date)
 import Result exposing (Result(..))
@@ -21,31 +18,11 @@ type alias PostMeta =
   }
 
 
-fetchIndex : String -> a -> Task String (List PostMeta)
+fetchIndex : String -> AppInterface -> Task String (List PostMeta)
 fetchIndex basePath _ =
   basePath </> "posts.json"
   |> Http.get (Decode.list postMetaDecoder)
   |> Task.mapError toString
-
-
-renderIndex : Targeter -> (List PostMeta) -> Html
-renderIndex chgr =
-  List.sortBy (Date.toTime << .date)
-  >> List.reverse
-  >> List.map (\pm ->
-          li [ class "element" ]
-            [ a [ onClick chgr (navigate "post" pm.location)]
-                ([ h3 [] [text pm.title]]
-                ++ case pm.description of
-                    Nothing -> []
-                    Just d -> [p [ class "description" ] [text d]]
-                )
-            ])
-    -- >> List.intersperse (li [class "separator"] [])
-    >> ul [ class "post-list" ]
-
-indexProvider : String -> Handler
-indexProvider basePath = mkProvider (fetchIndex basePath) renderIndex
 
 
 postMetaDecoder : Decode.Decoder PostMeta

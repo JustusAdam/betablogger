@@ -8,14 +8,17 @@ import Html exposing (Html)
 import History
 
 
-mkProvider : (Query -> Task String a) -> (Targeter -> a -> Html) -> Handler
+mkProvider
+  : (AppInterface -> Task String a)
+  -> (AppInterface -> a -> Task String Html)
+  -> Handler
 mkProvider fetchTask renderer interface =
   let
     url = interface.currentUrl
   in
     History.setPath (Erl.toString url)
-    `Task.andThen` \_ -> (fetchTask url.query)
-    `Task.andThen` (Task.succeed << renderer interface.navigator)
+    `Task.andThen` \_ -> fetchTask interface
+    `Task.andThen` renderer interface
 
 
 

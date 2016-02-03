@@ -11,6 +11,10 @@ body {
   background-color: @bright-grey;
 }
 
+.page-container {
+  margin-top: 2 * 15px + 15px;
+}
+
 .post-list {
   padding-left: 0;
 
@@ -105,13 +109,15 @@ footer {
   border-bottom: 1px solid darken(@header-color, 10%);
 }
 
+@shadow-color: darken(@white-isch-color, 30%);
+
 header {
   padding: 60px 20px;
-  margin-top: 2 * 15px + 1em;
+  box-shadow: 0 3px 5px @shadow-color;
 }
 
 article {
   background-color: @white-isch-color;
-  box-shadow: 0 5px 5px darken(@white-isch-color, 30%);
+  box-shadow: 0 5px 5px @shadow-color;
   padding: 30px;
 }
