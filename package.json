@@ -1,0 +1,23 @@
+{
+  "name": "betablogger",
+  "version": "1.0.0",
+  "description": "A one page blog in elm.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JustusAdam/betablogger.git"
+  },
+  "author": "Justus Adam",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JustusAdam/betablogger/issues"
+  },
+  "homepage": "https://github.com/JustusAdam/betablogger#readme",
+  "dependencies": {
+    "gulp-elm": "^0.2.0",
+    "gulp-less": "^3.0.5"
+  }
+}

@@ -1,7 +1,6 @@
 module Template where
 
 
-import OnePageStack.Template as T exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -14,82 +13,109 @@ import Task
 import Markdown
 import Json.Decode as Decode
 import Util exposing (singleton)
+import OnePageStack.Types exposing (..)
+import OnePageStack.Provider.Index exposing (PostMeta)
+import OnePageStack.Provider.Util exposing (navigate)
+import Date
 
 
-sidebar : String -> AcquireComponent
-sidebar basePath _ = 
+type alias PageInformation =
+  { interface : AppInterface
+  , title : Maybe String
+  , content : Html
+  }
+
+
+clearfix = div [class "clearfix"] []
+
+
+renderIndex : String -> AppInterface -> (List PostMeta) -> Task.Task String Html
+renderIndex basePath i postData =
+  let
+    {navigator} = i
+    content =
+      postData
+      |> List.sortBy (Date.toTime << .date)
+      |> List.reverse
+      |> List.map (\pm ->
+              li [ class "element" ]
+                [ a [ onClick navigator (navigate "post" pm.location)]
+                    ([ h3 [] [text pm.title]]
+                    ++ case pm.description of
+                        Nothing -> []
+                        Just d -> [p [ class "description" ] [text d]]
+                    )
+                ])
+        -- >> List.intersperse (li [class "separator"] [])
+      |> ul [ class "post-list" ]
+  in
+    flip Task.map (sidebar basePath) <| \sb ->
+      indexTemplate
+        { sidebar = sb
+        , pageInformation =
+          { title = Just "Welcome to my blog"
+          , interface = i
+          , content = content
+          }
+        }
+
+
+renderPost : AppInterface -> Html -> Task.Task String Html
+renderPost i c = Task.succeed <|
+  postTemplate { content = c, interface = i, title = Nothing }
+
+
+sidebar : String -> Task.Task String Html
+sidebar basePath =
   Http.get (Decode.list Decode.string) (basePath </> "sidebar.json")
-  |> Task.map 
+  |> Task.map
       (List.map (
         Markdown.toHtml
         >> singleton
-        >> li [ style [("list-style-type", "none"), ("margin", "none")] ]
+        >> li []
         )
-      >> ul []
-      >> Just)
-  |> Task.mapError toString 
-  
+      >> ul [])
+  |> Task.mapError toString
 
 
-(:=) = (,)
-
-
-headerStyle = 
-  [ "top" := "0"
-  , "width" := "100%"
-  , "background-color" := "rgb(62, 62, 62)"
-  , "color" := "white"
-  ]
-
-
-headerImpl : TemplateBuilder Html
-headerImpl =
-  getInterface `T.andThen` \{navigator, currentUrl} ->
+headerImpl : AppInterface -> Html
+headerImpl {navigator, currentUrl} =
   let
-    query_ = currentUrl 
-              |> Erl.removeQuery "page" 
+    query_ = currentUrl
+              |> Erl.removeQuery "page"
               |> Erl.removeQuery "type"
-              |> .query 
+              |> .query
   in
-    return <|
-      header [ style headerStyle ]
-        [ div [ style [ "padding" := "10px 15px"] ]
-            [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
-        ]
+    div [ class "top-bar" ]
+      [ div [ class "wrapper" ]
+          [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
+      ]
 
 
 
-footerBlock : List Html -> Html 
-footerBlock inner = 
-  div [ style [ "width" := "33%", "float":= "left"] ]
-    [ div [ style [ "margin" := "15px 15px"] ] inner
-    ]
+footerBlock : List Html -> Html
+footerBlock inner =
+  div [ class "footer-block" ]
+    [ div [ class "inner" ] inner ]
 
 
-centerBlock = 
-  [ "width" := "960px"
-  , "margin-left" := "auto"
-  , "margin-right" := "auto"
-  ]
-
-
-pageTemplate : Template
-pageTemplate =
-  headerImpl `T.andThen` \header ->
-  render <| \main ->
+pageTemplate : PageInformation -> Html
+pageTemplate { interface, title, content } =
   div
-    []
-    [ header
-    , div [ style centerBlock ]
-      [ main ]
-    , footer [ style 
-                [ "margin" := "20px"
-                , "border" := "1px solid rgb(233, 233, 233)"
-                ] ]
-      [ div [ style centerBlock ]
+    [ class "page-container" ]
+    <| headerImpl interface
+    :: (case title of
+          Just t -> [header [] [ div [ class "center-block" ] [ h1 [] [ text t ] ] ]]
+          Nothing -> [])
+    ++
+    [ div [ class "center-block" ]
+      [ content ]
+    , clearfix
+    , footer []
+      [ div [ class "center-block" ]
         [ footerBlock
           [ text "This site is built with the wonderful ", a [href "http://elm-lang.org"] [ text "Elm"], text " language" ]
-        
+
         , footerBlock [ text "" ]
         , footerBlock
           [ text "©️ 2016 Justus Adam" ]
@@ -98,26 +124,38 @@ pageTemplate =
     ]
 
 
-postTemplate : Template
-postTemplate = 
-  pageTemplate `nest` render (\main ->
-    div []
-      [ section [] 
-        [ main ]
-      ]
-  )
+postTemplate : PageInformation -> Html
+postTemplate pi =
+  let
+    { content } = pi
+    newContent =
+      div []
+        [ article []
+          [ content ]
+        ]
+  in
+    pageTemplate { pi | content = newContent }
 
 
-indexTemplate : String -> Template
-indexTemplate basePath = 
-  acquire (sidebar basePath) `T.andThen` \sb ->
-  pageTemplate `nest` 
-    render (\main ->
-        div []
-          [ section [ style [ "float" := "left", "width" := "66%" ] ] [ main ]
-          , div [ style [ "float" := "left", "width" := "33%" ] ] 
-            [ div [ style [ "margin" := "20px" ] ] 
-              <| (\a -> [a]) <| withDefault (text "no sidebar") sb
+type alias IndexTemplateData =
+  { sidebar : Html
+  , pageInformation : PageInformation
+  }
+
+
+indexTemplate : IndexTemplateData -> Html
+indexTemplate { sidebar, pageInformation } =
+  let
+    newContent =
+      div []
+        [ section [ class "main-content" ] [ pageInformation.content ]
+        , div [ style [ ("float", "left"), ("width", "25%") ] ]
+          [ div [ class "sidebar" ]
+            [ h3 [] [ text "\"News\"" ]
+            , sidebar
             ]
-          , div [ style [ "clear" := "both" ]] []
-          ])
+          ]
+        , clearfix
+        ]
+  in
+    pageTemplate { pageInformation | content = newContent}
