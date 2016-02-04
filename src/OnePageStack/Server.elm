@@ -15,16 +15,35 @@ import Debug
 import Markdown
 import Maybe exposing (withDefault)
 import OnePageStack.Types exposing (..)
+import Path.Url as PU exposing ((</>))
+import String
+import Maybe.Extra exposing (or)
+import Debug
+import List.Extra exposing (last, init)
 
 
-handleRequest : Handler -> Providers -> AppInterface -> Task String ()
-handleRequest defaultProvider providers interface =
+handleRequest : Providers -> AppInterface -> Task String ()
+handleRequest providers interface =
   let
-    provider = Dict.get "type" interface.currentUrl.query `Maybe.andThen` flip Dict.get providers |> withDefault defaultProvider
+    finder str rest =
+      Maybe.map (\a -> (a, rest)) (Dict.get str providers)
+      `or` if String.isEmpty str
+             then Nothing
+             else
+               let
+                 s = String.split "/" str
+                 newRest = withDefault rest <| Maybe.map (\s -> s::rest) <| last s
+                 base = String.join "/" <| withDefault [] <| init s
+               in
+                 finder base newRest
+
   in
-    provider interface
-    `Task.andThen` (Signal.send interface.canvas << Page)
-    `Task.onError` (Signal.send interface.canvas << PageNotFound << toString)
+    case finder interface.currentUrl [] of
+      Nothing -> Signal.send interface.canvas <| PageNotFound <| toString "No suitable provider found"
+      Just (provider, rest) ->
+        provider interface (String.join "/" rest)
+        `Task.andThen` (Signal.send interface.canvas << Page)
+        `Task.onError` (Signal.send interface.canvas << PageNotFound << toString)
 
 
 view : Page -> Html
@@ -43,25 +62,30 @@ locationChanger : Signal.Mailbox LocationChange
 locationChanger = Signal.mailbox Nothing
 
 
-interfaceSignal : Signal Url -> Signal AppInterface
-interfaceSignal = Signal.map (AppInterface contentHook.address locationChanger.address)
-
-
-server : Handler -> Providers -> Signal Url -> Signal (Task String ())
-server defaultProvider p = Signal.map (handleRequest defaultProvider p) << interfaceSignal
-
-
-currentLocation : Signal String -> Signal Url
-currentLocation = Signal.map2
-  (\new initial ->
-    let
-      url = Erl.parse initial
-    in
-      case new of
-        Nothing -> url
-        Just q -> { url | query = q}
-  )
+lcTask : Signal (Task String ())
+lcTask = Signal.map2 (\orig change ->
+  case change of
+    Nothing -> Task.succeed ()
+    Just chng ->
+      let
+        basepath = String.split "#" orig
+                    |> List.head
+                    |> withDefault ""
+      in
+        History.setPath <| basepath ++ "#" ++ chng)
+  (Signal.sampleOn locationChanger.signal History.path)
   locationChanger.signal
+
+
+interfaceSignal : Signal AppInterface
+interfaceSignal =
+  Signal.map
+  (String.dropLeft 1 >> AppInterface contentHook.address locationChanger.address)
+  History.hash
+
+
+server : Providers -> Signal (Task String ())
+server p = Signal.map (handleRequest p << Debug.log "change triggered") interfaceSignal
 
 
 serverOutput : Signal Html

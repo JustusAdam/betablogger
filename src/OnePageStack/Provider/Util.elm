@@ -9,22 +9,21 @@ import History
 
 
 mkProvider
-  : (AppInterface -> Task String a)
+  : (AppInterface -> String -> Task String a)
   -> (AppInterface -> a -> Task String Html)
   -> Handler
-mkProvider fetchTask renderer interface =
+mkProvider fetchTask renderer interface r =
   let
     url = interface.currentUrl
   in
-    History.setPath (Erl.toString url)
-    `Task.andThen` \_ -> fetchTask interface
+    fetchTask interface r
     `Task.andThen` renderer interface
 
 
 
-navigate : String -> String -> LocationChange
-navigate s1 s2 = Just <| Dict.fromList [("type", s1), ("page", s2)]
+navigate : String -> LocationChange
+navigate = Just
 
 
 withTemplate : (Html -> Html) -> Handler -> Handler
-withTemplate template f interface = Task.map template (f interface)
+withTemplate template f interface r = Task.map template (f interface r)

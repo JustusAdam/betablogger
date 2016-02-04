@@ -14,11 +14,8 @@ import Path.Url exposing ((</>))
 type alias Post = String
 
 
-fetchPost : String -> Query -> Task String Html
-fetchPost basePath params =
-  case Dict.get "page" params of
-    Nothing -> Task.fail "No page specified"
-    Just page ->
-      Http.getString (basePath </> page)
-      |> Task.map Markdown.toHtml
-      |> Task.mapError toString
+fetchPost : String -> String -> Task String Html
+fetchPost basePath page =
+  Http.getString (basePath </> page)
+  |> Task.map Markdown.toHtml
+  |> Task.mapError toString

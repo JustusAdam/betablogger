@@ -39,7 +39,7 @@ renderIndex basePath i postData =
       |> List.reverse
       |> List.map (\pm ->
               li [ class "element" ]
-                [ a [ onClick navigator (navigate "post" pm.location)]
+                [ a [ onClick navigator (navigate <| "post/" ++ pm.location)]
                     ([ h3 [] [text pm.title]]
                     ++ case pm.description of
                         Nothing -> []
@@ -80,16 +80,10 @@ sidebar basePath =
 
 headerImpl : AppInterface -> Html
 headerImpl {navigator, currentUrl} =
-  let
-    query_ = currentUrl
-              |> Erl.removeQuery "page"
-              |> Erl.removeQuery "type"
-              |> .query
-  in
-    div [ class "top-bar" ]
-      [ div [ class "wrapper" ]
-          [ a [ onClick navigator <| Just query_ ] [ text "Justus's homepage v3.0" ] ]
-      ]
+  div [ class "top-bar" ]
+    [ div [ class "wrapper" ]
+        [ a [ onClick navigator <| Just "/" ] [ text "Justus's homepage v3.0" ] ]
+    ]
 
 
 
