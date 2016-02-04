@@ -15,3 +15,7 @@ when = unless << not
 
 singleton : a -> List a
 singleton a = [a]
+
+
+first : (a -> b) -> (a, c) -> (b, c)
+first f (a, c) = (f a, c)

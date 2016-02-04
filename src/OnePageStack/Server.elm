@@ -20,6 +20,39 @@ import String
 import Maybe.Extra exposing (or)
 import Debug
 import List.Extra exposing (last, init)
+import Monad.State as S exposing (State, modify, get, put)
+import Util exposing (first)
+
+
+type alias ServerConfig =
+  { routes : Dict.Dict String Handler
+  , nesting : Maybe String
+  }
+type alias Initializer a = State ServerConfig a
+
+
+addRoutes : List (String, Handler) -> Initializer ()
+addRoutes newRoutes =
+  S.modify (\conf ->
+    {conf | routes = Dict.union conf.routes
+                      <| Dict.fromList
+                      <| case conf.nesting of
+                            Nothing -> newRoutes
+                            Just nest -> List.map (first (\r -> nest </> r)) newRoutes})
+
+
+nestServer : String -> Initializer a -> Initializer a
+nestServer nest init =
+  get `S.andThen` \oldConf ->
+  put { oldConf | nesting = case oldConf.nesting of
+                              Nothing -> Just nest
+                              Just n -> Just <| n </> nest}
+  `S.thenDo` init
+  `S.andThen` \r ->
+  get `S.andThen` \newConf ->
+  put { newConf | nesting = oldConf.nesting }
+  `S.thenDo` S.return r
+
 
 
 handleRequest : Providers -> AppInterface -> Task String ()
