@@ -10631,6 +10631,7 @@ Elm.Erl.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var appendPathSegments = F2(function (segments,url) {    var newPath = A2($List.append,url.path,segments);return _U.update(url,{path: newPath});});
    var removeQuery = F2(function (key,url) {    var updated = A2($Dict.remove,key,url.query);return _U.update(url,{query: updated});});
    var setQuery = F3(function (key,val,url) {    var updated = A2($Dict.singleton,key,val);return _U.update(url,{query: updated});});
    var addQuery = F3(function (key,val,url) {
@@ -10638,65 +10639,49 @@ Elm.Erl.make = function (_elm) {
       return _U.update(url,{query: updated});
    });
    var clearQuery = function (url) {    return _U.update(url,{query: $Dict.empty});};
-   var $new = {protocol: "",username: "",password: "",host: _U.list([]),path: _U.list([]),port$: 0,hash: _U.list([]),query: $Dict.empty};
-   var hashComponent = function (url) {
-      var encoded = A2($List.map,$Http.uriEncode,url.hash);
-      var _p0 = url.hash;
-      if (_p0.ctor === "[]") {
-            return "";
-         } else {
-            return A2($Basics._op["++"],"#",A2($String.join,"/",encoded));
-         }
-   };
+   var $new = {protocol: "",username: "",password: "",host: _U.list([]),path: _U.list([]),port$: 0,hash: "",query: $Dict.empty};
+   var hashToString = function (url) {    return $String.isEmpty(url.hash) ? "" : A2($Basics._op["++"],"#",url.hash);};
    var pathComponent = function (url) {
       var encoded = A2($List.map,$Http.uriEncode,url.path);
       return _U.eq($List.length(url.path),0) ? "" : A2($Basics._op["++"],"/",A2($String.join,"/",encoded));
    };
    var portComponent = function (url) {
-      var _p1 = url.port$;
-      switch (_p1)
+      var _p0 = url.port$;
+      switch (_p0)
       {case 0: return "";
          case 80: return "";
          default: return A2($Basics._op["++"],":",$Basics.toString(url.port$));}
    };
    var hostComponent = function (url) {    return $Http.uriEncode(A2($String.join,".",url.host));};
    var protocolComponent = function (url) {
-      var _p2 = url.protocol;
-      if (_p2 === "") {
+      var _p1 = url.protocol;
+      if (_p1 === "") {
             return "";
          } else {
             return A2($Basics._op["++"],url.protocol,"://");
          }
    };
-   var queryToString = function (query) {
-      var tuples = $Dict.toList(query);
+   var queryToString = function (url) {
+      var tuples = $Dict.toList(url.query);
       var encodedTuples = A2($List.map,
-      function (_p3) {
-         var _p4 = _p3;
-         return {ctor: "_Tuple2",_0: $Http.uriEncode(_p4._0),_1: $Http.uriEncode(_p4._1)};
+      function (_p2) {
+         var _p3 = _p2;
+         return {ctor: "_Tuple2",_0: $Http.uriEncode(_p3._0),_1: $Http.uriEncode(_p3._1)};
       },
       tuples);
-      var parts = A2($List.map,function (_p5) {    var _p6 = _p5;return A2($Basics._op["++"],_p6._0,A2($Basics._op["++"],"=",_p6._1));},encodedTuples);
-      return A2($String.join,"&",parts);
-   };
-   var queryComponent = function (url) {
-      var _p7 = $Dict.isEmpty(url.query);
-      if (_p7 === true) {
-            return "";
-         } else {
-            return A2($Basics._op["++"],"?",queryToString(url.query));
-         }
+      var parts = A2($List.map,function (_p4) {    var _p5 = _p4;return A2($Basics._op["++"],_p5._0,A2($Basics._op["++"],"=",_p5._1));},encodedTuples);
+      return $Dict.isEmpty(url.query) ? "" : A2($Basics._op["++"],"?",A2($String.join,"&",parts));
    };
    var toString = function (url) {
-      var query$ = queryComponent(url);
-      var hash = hashComponent(url);
+      var hash = hashToString(url);
+      var query$ = queryToString(url);
       var path$ = pathComponent(url);
       var port$ = portComponent(url);
       var host$ = hostComponent(url);
       var protocol$ = protocolComponent(url);
       return A2($Basics._op["++"],
       protocol$,
-      A2($Basics._op["++"],host$,A2($Basics._op["++"],port$,A2($Basics._op["++"],path$,A2($Basics._op["++"],hash,query$)))));
+      A2($Basics._op["++"],host$,A2($Basics._op["++"],port$,A2($Basics._op["++"],path$,A2($Basics._op["++"],query$,hash)))));
    };
    var queryStringElementToTuple = function (element) {
       var splitted = A2($String.split,"=",element);
@@ -10712,14 +10697,11 @@ Elm.Erl.make = function (_elm) {
    };
    var parseQuery = function (str) {    return $Dict.fromList(queryTuples(str));};
    var extractQuery = function (str) {
-      var parts = A2($String.split,"?",str);
-      var maybeFirst = $List.head(A2($List.drop,1,parts));
-      return A2($Maybe.withDefault,"",maybeFirst);
+      return A2($Maybe.withDefault,"",$List.head(A2($String.split,"#",A2($Maybe.withDefault,"",$List.head(A2($List.drop,1,A2($String.split,"?",str)))))));
    };
    var queryFromAll = function (all) {    return parseQuery(extractQuery(all));};
-   var extractHash = function (str) {
-      return A2($Maybe.withDefault,"",$List.head(A2($String.split,"?",A2($Maybe.withDefault,"",$List.head(A2($List.drop,1,A2($String.split,"#",str)))))));
-   };
+   var extractHash = function (str) {    return A2($Maybe.withDefault,"",$List.head(A2($List.drop,1,A2($String.split,"#",str))));};
+   var hashFromAll = function (str) {    return extractHash(str);};
    var extractPort = function (str) {
       var rx = $Regex.regex(":\\d+");
       var res = A3($Regex.find,$Regex.AtMost(1),rx,str);
@@ -10730,8 +10712,8 @@ Elm.Erl.make = function (_elm) {
    var parseHost = function (str) {    return A2($String.split,".",str);};
    var extractProtocol = function (str) {
       var parts = A2($String.split,"://",str);
-      var _p8 = $List.length(parts);
-      if (_p8 === 1) {
+      var _p6 = $List.length(parts);
+      if (_p6 === 1) {
             return "";
          } else {
             return A2($Maybe.withDefault,"",$List.head(parts));
@@ -10740,8 +10722,8 @@ Elm.Erl.make = function (_elm) {
    var leftFrom = F2(function (delimiter,str) {
       var parts = A2($String.split,delimiter,str);
       var head = $List.head(parts);
-      var _p9 = $List.length(parts);
-      switch (_p9)
+      var _p7 = $List.length(parts);
+      switch (_p7)
       {case 0: return "";
          case 1: return "";
          default: return A2($Maybe.withDefault,"",head);}
@@ -10769,21 +10751,21 @@ Elm.Erl.make = function (_elm) {
       return A4($Regex.replace,
       $Regex.AtMost(1),
       $Regex.regex(":\\d+"),
-      function (_p10) {
+      function (_p8) {
          return "";
       },
       A4($Regex.replace,
       $Regex.AtMost(1),
       $Regex.regex(host),
-      function (_p11) {
+      function (_p9) {
          return "";
       },
       A2(leftFromOrSame,"#",A2(leftFromOrSame,"?",A2(rightFromOrSame,"//",str)))));
    };
    var rightFrom = F2(function (delimiter,str) {
       var parts = A2($String.split,delimiter,str);
-      var _p12 = $List.length(parts);
-      switch (_p12)
+      var _p10 = $List.length(parts);
+      switch (_p10)
       {case 0: return "";
          case 1: return "";
          default: return A2($Maybe.withDefault,"",$List.head($List.reverse(parts)));}
@@ -10791,8 +10773,6 @@ Elm.Erl.make = function (_elm) {
    var notEmpty = function (str) {    return $Basics.not($String.isEmpty(str));};
    var parsePath = function (str) {    return A2($List.map,$Http.uriDecode,A2($List.filter,notEmpty,A2($String.split,"/",str)));};
    var pathFromAll = function (str) {    return parsePath(extractPath(str));};
-   var parseHash = function (str) {    return A2($List.map,$Http.uriDecode,A2($List.filter,notEmpty,A2($String.split,"/",str)));};
-   var hashFromAll = function (str) {    return parseHash(extractHash(str));};
    var parse = function (str) {
       return {host: host(str)
              ,hash: hashFromAll(str)
@@ -10817,7 +10797,9 @@ Elm.Erl.make = function (_elm) {
                             ,parse: parse
                             ,removeQuery: removeQuery
                             ,setQuery: setQuery
+                            ,appendPathSegments: appendPathSegments
                             ,toString: toString
+                            ,queryToString: queryToString
                             ,Url: Url};
 };
 Elm.OnePageStack = Elm.OnePageStack || {};
