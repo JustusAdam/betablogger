@@ -40,6 +40,11 @@ body {
   }
 }
 
+.sidebar-container {
+  float: left;
+  width: 25%;
+}
+
 .sidebar {
 
   ul {
@@ -106,7 +111,7 @@ footer {
 .top-bar, header {
   background-color: @header-color;
   color: @white-isch-color;
-  border-bottom: 1px solid darken(@header-color, 10%);
+  border-bottom: 2px solid darken(@header-color, 10%);
 }
 
 @shadow-color: darken(@white-isch-color, 30%);
@@ -120,4 +125,18 @@ article {
   background-color: @white-isch-color;
   box-shadow: 0 5px 5px @shadow-color;
   padding: 30px;
+}
+
+@media (max-width: 960px) {
+  .main-content {
+    width: 100%;
+  }
+
+  .sidebar-container {
+    width: 100%;
+  }
+
+  .center-block {
+    width: 100%;
+  }
 }
