@@ -8,10 +8,14 @@ import OnePageStack.Server exposing (..)
 import OnePageStack.Provider exposing (mkProvider)
 import OnePageStack.Provider.Post exposing (fetchPost)
 import OnePageStack.Provider.Index exposing (fetchIndex)
-import Template exposing (renderPost, renderIndex)
+import OnePageStack.Provider.Projects exposing (fetchProjects)
+import Template exposing (renderPost, renderIndex, renderProjects)
 import Path.Url exposing ((</>))
 
 -- MODEL
+
+
+(=>) = (,)
 
 
 basePath : String
@@ -26,10 +30,16 @@ postProvider : String -> Handler
 postProvider basePath = mkProvider (const <| fetchPost basePath) renderPost
 
 
+projectProvider : String -> Handler
+projectProvider user = mkProvider (\_ _ -> fetchProjects user) renderProjects
+
+
 providers : Providers
 providers = Dict.fromList
-  [ ("post", (postProvider (basePath </> "posts")))
-  , ("", indexProvider basePath)]
+  [ "post" => postProvider (basePath </> "posts")
+  , "" => indexProvider basePath
+  , "projects" => projectProvider "JustusAdam"
+  ]
 
 main = serverOutput
 

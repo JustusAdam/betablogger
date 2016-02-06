@@ -12387,9 +12387,7 @@ Elm.OnePageStack.Server.make = function (_elm) {
             });
          }
    });
-   var server = function (p) {
-      return A2($Signal.map,function (_p6) {    return A2(handleRequest,p,A2($Debug.log,"change triggered",_p6));},interfaceSignal);
-   };
+   var server = function (p) {    return A2($Signal.map,handleRequest(p),interfaceSignal);};
    var nestServer = F2(function (nest,init) {
       return A2($Monad$State.andThen,
       $Monad$State.get,
@@ -12398,11 +12396,11 @@ Elm.OnePageStack.Server.make = function (_elm) {
          A2($Monad$State.thenDo,
          $Monad$State.put(_U.update(oldConf,
          {nesting: function () {
-            var _p7 = oldConf.nesting;
-            if (_p7.ctor === "Nothing") {
+            var _p6 = oldConf.nesting;
+            if (_p6.ctor === "Nothing") {
                   return $Maybe.Just(nest);
                } else {
-                  return $Maybe.Just(A2($Path$Url._op["</>"],_p7._0,nest));
+                  return $Maybe.Just(A2($Path$Url._op["</>"],_p6._0,nest));
                }
          }()})),
          init),
@@ -12421,11 +12419,11 @@ Elm.OnePageStack.Server.make = function (_elm) {
          {routes: A2($Dict.union,
          conf.routes,
          $Dict.fromList(function () {
-            var _p8 = conf.nesting;
-            if (_p8.ctor === "Nothing") {
+            var _p7 = conf.nesting;
+            if (_p7.ctor === "Nothing") {
                   return newRoutes;
                } else {
-                  return A2($List.map,$Util.first(function (r) {    return A2($Path$Url._op["</>"],_p8._0,r);}),newRoutes);
+                  return A2($List.map,$Util.first(function (r) {    return A2($Path$Url._op["</>"],_p7._0,r);}),newRoutes);
                }
          }()))});
       });
@@ -12672,6 +12670,98 @@ Elm.OnePageStack.Provider.Index.make = function (_elm) {
    });
    return _elm.OnePageStack.Provider.Index.values = {_op: _op,fetchIndex: fetchIndex,PostMeta: PostMeta};
 };
+Elm.OnePageStack = Elm.OnePageStack || {};
+Elm.OnePageStack.Provider = Elm.OnePageStack.Provider || {};
+Elm.OnePageStack.Provider.Projects = Elm.OnePageStack.Provider.Projects || {};
+Elm.OnePageStack.Provider.Projects.make = function (_elm) {
+   "use strict";
+   _elm.OnePageStack = _elm.OnePageStack || {};
+   _elm.OnePageStack.Provider = _elm.OnePageStack.Provider || {};
+   _elm.OnePageStack.Provider.Projects = _elm.OnePageStack.Provider.Projects || {};
+   if (_elm.OnePageStack.Provider.Projects.values) return _elm.OnePageStack.Provider.Projects.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Http = Elm.Http.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var _op = {};
+   var Project = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return function (k) {
+                                    return function (l) {
+                                       return function (m) {
+                                          return function (n) {
+                                             return {id: a
+                                                    ,name: b
+                                                    ,fullName: c
+                                                    ,description: d
+                                                    ,starts: e
+                                                    ,watchers: f
+                                                    ,forks: g
+                                                    ,language: h
+                                                    ,isFork: i
+                                                    ,htmlUrl: j
+                                                    ,homepage: k
+                                                    ,hasIssues: l
+                                                    ,hasPages: m
+                                                    ,hasWiki: n};
+                                          };
+                                       };
+                                    };
+                                 };
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
+   var projectDecoder = A2($Json$Decode.andThen,
+   A9($Json$Decode.object8,
+   Project,
+   A2($Json$Decode._op[":="],"id",$Json$Decode.$int),
+   A2($Json$Decode._op[":="],"name",$Json$Decode.string),
+   A2($Json$Decode._op[":="],"full_name",$Json$Decode.string),
+   A2($Json$Decode._op[":="],"description",$Json$Decode.string),
+   A2($Json$Decode._op[":="],"stargazers_count",$Json$Decode.$int),
+   A2($Json$Decode._op[":="],"watchers_count",$Json$Decode.$int),
+   A2($Json$Decode._op[":="],"forks_count",$Json$Decode.$int),
+   A2($Json$Decode._op[":="],"language",$Json$Decode.string)),
+   function (f) {
+      return A7($Json$Decode.object6,
+      f,
+      A2($Json$Decode._op[":="],"fork",$Json$Decode.bool),
+      A2($Json$Decode._op[":="],"html_url",$Json$Decode.string),
+      A2($Json$Decode._op[":="],"homepage",$Json$Decode.string),
+      A2($Json$Decode._op[":="],"has_issues",$Json$Decode.bool),
+      A2($Json$Decode._op[":="],"has_pages",$Json$Decode.bool),
+      A2($Json$Decode._op[":="],"has_wiki",$Json$Decode.bool));
+   });
+   var fetchProjects = function (user) {
+      return A2($Task.mapError,
+      $Basics.toString,
+      A2($Http.get,
+      $Json$Decode.list(projectDecoder),
+      A2($Debug.log,"Url",A2($Basics._op["++"],"http://github.com/users/",A2($Basics._op["++"],user,"/repos")))));
+   };
+   return _elm.OnePageStack.Provider.Projects.values = {_op: _op,Project: Project,projectDecoder: projectDecoder,fetchProjects: fetchProjects};
+};
 Elm.Template = Elm.Template || {};
 Elm.Template.make = function (_elm) {
    "use strict";
@@ -12690,6 +12780,7 @@ Elm.Template.make = function (_elm) {
    $Markdown = Elm.Markdown.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $OnePageStack$Provider$Index = Elm.OnePageStack.Provider.Index.make(_elm),
+   $OnePageStack$Provider$Projects = Elm.OnePageStack.Provider.Projects.make(_elm),
    $OnePageStack$Provider$Util = Elm.OnePageStack.Provider.Util.make(_elm),
    $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
@@ -12755,6 +12846,15 @@ Elm.Template.make = function (_elm) {
       var newContent = A2($Html.div,_U.list([]),_U.list([A2($Html.article,_U.list([]),_U.list([content]))]));
       return pageTemplate(_U.update(pi,{content: newContent}));
    };
+   var renderProjects = F2(function (i,projects) {
+      var renderProject = function (project) {
+         return _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text(project.name)])),A2($Html.p,_U.list([]),_U.list([$Html.text(project.description)]))]);
+      };
+      var c = A2($Html.ul,
+      _U.list([$Html$Attributes.$class("project-list")]),
+      A2($List.map,$Html.li(_U.list([$Html$Attributes.$class("project")])),A2($List.map,renderProject,projects)));
+      return $Task.succeed(postTemplate({$interface: i,title: $Maybe.Just("My Projects"),content: c}));
+   });
    var renderPost = F2(function (i,c) {    return $Task.succeed(postTemplate({content: c,$interface: i,title: $Maybe.Nothing}));});
    var indexTemplate = function (_p8) {
       var _p9 = _p8;
@@ -12805,6 +12905,7 @@ Elm.Template.make = function (_elm) {
                                  ,PageInformation: PageInformation
                                  ,clearfix: clearfix
                                  ,renderIndex: renderIndex
+                                 ,renderProjects: renderProjects
                                  ,renderPost: renderPost
                                  ,sidebar: sidebar
                                  ,headerImpl: headerImpl
@@ -12828,6 +12929,7 @@ Elm.Main.make = function (_elm) {
    $OnePageStack$Provider = Elm.OnePageStack.Provider.make(_elm),
    $OnePageStack$Provider$Index = Elm.OnePageStack.Provider.Index.make(_elm),
    $OnePageStack$Provider$Post = Elm.OnePageStack.Provider.Post.make(_elm),
+   $OnePageStack$Provider$Projects = Elm.OnePageStack.Provider.Projects.make(_elm),
    $OnePageStack$Server = Elm.OnePageStack.Server.make(_elm),
    $OnePageStack$Types = Elm.OnePageStack.Types.make(_elm),
    $Path$Url = Elm.Path.Url.make(_elm),
@@ -12839,17 +12941,30 @@ Elm.Main.make = function (_elm) {
    var _op = {};
    var lc = Elm.Native.Task.make(_elm).performSignal("lc",$OnePageStack$Server.lcTask);
    var main = $OnePageStack$Server.serverOutput;
+   var projectProvider = function (user) {
+      return A2($OnePageStack$Provider.mkProvider,
+      F2(function (_p1,_p0) {    return $OnePageStack$Provider$Projects.fetchProjects(user);}),
+      $Template.renderProjects);
+   };
    var postProvider = function (basePath) {
       return A2($OnePageStack$Provider.mkProvider,$Util.$const($OnePageStack$Provider$Post.fetchPost(basePath)),$Template.renderPost);
    };
    var indexProvider = function (basePath) {
       return A2($OnePageStack$Provider.mkProvider,
-      F2(function (i,_p0) {    return A2($OnePageStack$Provider$Index.fetchIndex,basePath,i);}),
+      F2(function (i,_p2) {    return A2($OnePageStack$Provider$Index.fetchIndex,basePath,i);}),
       $Template.renderIndex(basePath));
    };
    var basePath = "/blog-data";
-   var providers = $Dict.fromList(_U.list([{ctor: "_Tuple2",_0: "post",_1: postProvider(A2($Path$Url._op["</>"],basePath,"posts"))}
-                                          ,{ctor: "_Tuple2",_0: "",_1: indexProvider(basePath)}]));
+   _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
+   var providers = $Dict.fromList(_U.list([A2(_op["=>"],"post",postProvider(A2($Path$Url._op["</>"],basePath,"posts")))
+                                          ,A2(_op["=>"],"",indexProvider(basePath))
+                                          ,A2(_op["=>"],"projects",projectProvider("JustusAdam"))]));
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",$OnePageStack$Server.server(providers));
-   return _elm.Main.values = {_op: _op,basePath: basePath,indexProvider: indexProvider,postProvider: postProvider,providers: providers,main: main};
+   return _elm.Main.values = {_op: _op
+                             ,basePath: basePath
+                             ,indexProvider: indexProvider
+                             ,postProvider: postProvider
+                             ,projectProvider: projectProvider
+                             ,providers: providers
+                             ,main: main};
 };

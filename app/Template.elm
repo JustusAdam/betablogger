@@ -16,6 +16,7 @@ import Util exposing (singleton)
 import OnePageStack.Types exposing (..)
 import OnePageStack.Provider.Index exposing (PostMeta)
 import OnePageStack.Provider.Util exposing (navigate)
+import OnePageStack.Provider.Projects exposing (Project)
 import Date
 
 
@@ -58,6 +59,22 @@ renderIndex basePath i postData =
           , content = content
           }
         }
+
+
+renderProjects : AppInterface -> List Project -> Task.Task String Html
+renderProjects i projects =
+  let
+    renderProject project =
+      [ h3 [] [ text project.name ]
+      , p [] [ text project.description ]
+      ]
+    c = projects
+      |> List.map renderProject
+      |> List.map (li [ class "project" ])
+      |> ul [ class "project-list" ]
+  in
+    Task.succeed <|
+      postTemplate { interface = i, title = Just "My Projects", content = c }
 
 
 renderPost : AppInterface -> Html -> Task.Task String Html

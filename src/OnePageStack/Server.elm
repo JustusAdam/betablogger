@@ -18,7 +18,6 @@ import OnePageStack.Types exposing (..)
 import Path.Url as PU exposing ((</>))
 import String
 import Maybe.Extra exposing (or)
-import Debug
 import List.Extra exposing (last, init)
 import Monad.State as S exposing (State, modify, get, put)
 import Util exposing (first)
@@ -118,7 +117,7 @@ interfaceSignal =
 
 
 server : Providers -> Signal (Task String ())
-server p = Signal.map (handleRequest p << Debug.log "change triggered") interfaceSignal
+server p = Signal.map (handleRequest p) interfaceSignal
 
 
 serverOutput : Signal Html
