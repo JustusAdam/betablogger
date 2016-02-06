@@ -12763,7 +12763,7 @@ Elm.Template.make = function (_elm) {
       _U.list([]),
       _U.list([A2($Html.section,_U.list([$Html$Attributes.$class("main-content")]),_U.list([_p10.content]))
               ,A2($Html.div,
-              _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "float",_1: "left"},{ctor: "_Tuple2",_0: "width",_1: "25%"}]))]),
+              _U.list([$Html$Attributes.$class("sidebar-container")]),
               _U.list([A2($Html.div,
               _U.list([$Html$Attributes.$class("sidebar")]),
               _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text("\"News\"")])),_p9.sidebar]))]))
