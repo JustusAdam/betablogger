@@ -143,7 +143,7 @@ indexTemplate { sidebar, pageInformation } =
     newContent =
       div []
         [ section [ class "main-content" ] [ pageInformation.content ]
-        , div [ style [ ("float", "left"), ("width", "25%") ] ]
+        , div [ class "sidebar-container" ]
           [ div [ class "sidebar" ]
             [ h3 [] [ text "\"News\"" ]
             , sidebar
