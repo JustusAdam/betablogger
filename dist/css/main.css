@@ -89,6 +89,19 @@ header {
   color: #f5f5f5;
   border-bottom: 2px solid #294467;
 }
+.page-menu {
+  padding: 0;
+  margin: 0;
+}
+.page-menu li {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0 15px;
+  padding: 0;
+}
+.page-menu .home {
+  margin: 0 20px;
+}
 header {
   padding: 60px 20px;
   box-shadow: 0 3px 5px #a9a9a9;
