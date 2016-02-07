@@ -65,16 +65,60 @@ renderProjects : AppInterface -> List Project -> Task.Task String Html
 renderProjects i projects =
   let
     renderProject project =
-      [ h3 [] [ text project.name ]
-      , p [] [ text project.description ]
-      ]
-    c = projects
+      let
+        language =
+          case project.language of
+            Just l -> [ span [ class "language" ] [ text l ] ]
+            _ -> []
+      in
+        [ div [] <|
+          language ++
+          [ span [ class "stats" ]
+            [ a [ class "stars", href project.starsUrl ]
+              [ span [ class "name" ] [ text "Stars" ]
+              , span [ class "count" ]  [ text <| toString project.stars ]
+              ]
+            , a [ class "watchers", href project.watchUrl ]
+              [ span [ class "name" ] [ text "Watchers" ]
+              , span [ class "count" ]  [ text <| toString project.watchers ]
+              ]
+            , a [ class "forks", href project.forksUrl ]
+              [ span [ class "name" ] [ text "Forks" ]
+              , span [ class "count" ]  [ text <| toString project.forks ]
+              ]
+            ]
+          , clearfix
+          ]
+        , h3 [ class "heading"]
+          [ a [ href project.htmlUrl ]
+            [ text <| project.name ++ if project.isFork then " (fork)" else "" ] ]
+        , p [] [ text project.description ]
+        ]
+    projectList = projects
+      |> List.sortWith (\projA projB ->
+        case compare projA.stars projB.stars of
+          EQ -> compare (Date.toTime projA.createdAt) (Date.toTime projB.createdAt)
+          o -> o)
+      |> List.reverse
       |> List.map renderProject
-      |> List.map (li [ class "project" ])
-      |> ul [ class "project-list" ]
+      |> List.map (div [ class "project" ] << singleton << div [ class "wrapper" ])
+      |> bisectList
+      |> List.map toRow
+      |> div [ class "project-list" ]
+    toRow e = div [ class "row" ] (e ++ [clearfix])
+    content =
+      article []
+        [ projectList
+        , clearfix
+        ]
+    bisectList l =
+      case l of
+        [] -> []
+        [x] -> [[x]]
+        (x::x'::xs) -> [x,x']::bisectList xs
   in
     Task.succeed <|
-      postTemplate { interface = i, title = Just "My Projects", content = c }
+      pageTemplate { interface = i, title = Just "My Projects", content = content }
 
 
 renderPost : AppInterface -> Html -> Task.Task String Html
