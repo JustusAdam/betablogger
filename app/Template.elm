@@ -99,7 +99,12 @@ headerImpl : AppInterface -> Html
 headerImpl {navigator, currentUrl} =
   div [ class "top-bar" ]
     [ div [ class "wrapper" ]
-        [ a [ onClick navigator <| Just "/" ] [ text "Justus's homepage v3.0" ] ]
+      [ ul [ class "page-menu" ]
+        [ li [ class "home" ]
+          [ a [ onClick navigator <| Just "/" ] [ text "Justus's homepage v3.0" ] ]
+        , li [] [ a [ onClick navigator <| Just "projects" ] [ text "Projects" ]]
+        ]
+      ]
     ]
 
 

@@ -6,6 +6,8 @@ import Json.Decode as Decode exposing ((:=))
 import Http
 import Task
 import Debug
+import Path.Url exposing ((</>), addExtension)
+import Date exposing (Date)
 
 
 type alias Project =
@@ -16,13 +18,14 @@ type alias Project =
   , starts : Int
   , watchers : Int
   , forks : Int
-  , language : String
+  , language : Maybe String
   , isFork : Bool
   , htmlUrl : String
-  , homepage : String
+  , homepage : Maybe String
   , hasIssues : Bool
   , hasPages : Bool
   , hasWiki : Bool
+  , createdAt : Date
   }
 
 projectDecoder : Decode.Decoder Project
@@ -35,20 +38,25 @@ projectDecoder =
     ("stargazers_count" := Decode.int)
     ("watchers_count" := Decode.int)
     ("forks_count" := Decode.int)
-    ("language" := Decode.string)
+    (Decode.maybe ("language" := Decode.string))
   `Decode.andThen` \f ->
-  Decode.object6 f
+  Decode.object7 f
     ("fork" := Decode.bool)
     ("html_url" := Decode.string)
-    ("homepage" := Decode.string)
+    (Decode.maybe ("homepage" := Decode.string))
     ("has_issues" := Decode.bool)
     ("has_pages" := Decode.bool)
     ("has_wiki" := Decode.bool)
+    (("created_at" := Decode.string)
+    `Decode.andThen` \date -> case Date.fromString date of
+                                Err e -> Decode.fail e
+                                Ok v -> Decode.succeed v)
 
 
-fetchProjects : String -> Task.Task String (List Project)
-fetchProjects user =
+
+fetchProjects : String -> String -> Task.Task String (List Project)
+fetchProjects basePath user =
 
   Task.mapError toString <|
   Http.get (Decode.list projectDecoder)
-    <| Debug.log "Url" <| "http://github.com/users/" ++ user ++ "/repos"
+    <| basePath </> "github-data" </> user `addExtension` ".json"

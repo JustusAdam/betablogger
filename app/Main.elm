@@ -30,15 +30,15 @@ postProvider : String -> Handler
 postProvider basePath = mkProvider (const <| fetchPost basePath) renderPost
 
 
-projectProvider : String -> Handler
-projectProvider user = mkProvider (\_ _ -> fetchProjects user) renderProjects
+projectProvider : String -> String -> Handler
+projectProvider basePath user = mkProvider (\_ _ -> fetchProjects basePath user) renderProjects
 
 
 providers : Providers
 providers = Dict.fromList
   [ "post" => postProvider (basePath </> "posts")
   , "" => indexProvider basePath
-  , "projects" => projectProvider "JustusAdam"
+  , "projects" => projectProvider basePath "JustusAdam"
   ]
 
 main = serverOutput
