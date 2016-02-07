@@ -2,3 +2,4 @@ elm-stuff/
 .DS_Store
 node_modules/
 dist/
+blog-data/github-data/*.json
