@@ -6470,26 +6470,271 @@ Elm.Dict.make = function (_elm) {
                              ,toList: toList
                              ,fromList: fromList};
 };
-Elm.Util = Elm.Util || {};
-Elm.Util.make = function (_elm) {
+Elm.Native.Date = {};
+Elm.Native.Date.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Date = localRuntime.Native.Date || {};
+	if (localRuntime.Native.Date.values)
+	{
+		return localRuntime.Native.Date.values;
+	}
+
+	var Result = Elm.Result.make(localRuntime);
+
+	function readDate(str)
+	{
+		var date = new Date(str);
+		return isNaN(date.getTime())
+			? Result.Err('unable to parse \'' + str + '\' as a date')
+			: Result.Ok(date);
+	}
+
+	var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+	var monthTable =
+		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+
+	return localRuntime.Native.Date.values = {
+		read: readDate,
+		year: function(d) { return d.getFullYear(); },
+		month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+		day: function(d) { return d.getDate(); },
+		hour: function(d) { return d.getHours(); },
+		minute: function(d) { return d.getMinutes(); },
+		second: function(d) { return d.getSeconds(); },
+		millisecond: function(d) { return d.getMilliseconds(); },
+		toTime: function(d) { return d.getTime(); },
+		fromTime: function(t) { return new Date(t); },
+		dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
+	};
+};
+
+Elm.Native.Time = {};
+
+Elm.Native.Time.make = function(localRuntime)
+{
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Time = localRuntime.Native.Time || {};
+	if (localRuntime.Native.Time.values)
+	{
+		return localRuntime.Native.Time.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+
+	// FRAMES PER SECOND
+
+	function fpsWhen(desiredFPS, isOn)
+	{
+		var msPerFrame = 1000 / desiredFPS;
+		var ticker = NS.input('fps-' + desiredFPS, null);
+
+		function notifyTicker()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+
+		function firstArg(x, y)
+		{
+			return x;
+		}
+
+		// input fires either when isOn changes, or when ticker fires.
+		// Its value is a tuple with the current timestamp, and the state of isOn
+		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
+
+		var initialState = {
+			isOn: false,
+			time: localRuntime.timer.programStart,
+			delta: 0
+		};
+
+		var timeoutId;
+
+		function update(input, state)
+		{
+			var currentTime = input._0;
+			var isOn = input._1;
+			var wasOn = state.isOn;
+			var previousTime = state.time;
+
+			if (isOn)
+			{
+				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
+			}
+			else if (wasOn)
+			{
+				clearTimeout(timeoutId);
+			}
+
+			return {
+				isOn: isOn,
+				time: currentTime,
+				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
+			};
+		}
+
+		return A2(
+			NS.map,
+			function(state) { return state.delta; },
+			A3(NS.foldp, F2(update), update(input.value, initialState), input)
+		);
+	}
+
+
+	// EVERY
+
+	function every(t)
+	{
+		var ticker = NS.input('every-' + t, null);
+		function tellTime()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+		var clock = A2(NS.map, fst, NS.timestamp(ticker));
+		setInterval(tellTime, t);
+		return clock;
+	}
+
+
+	function fst(pair)
+	{
+		return pair._0;
+	}
+
+
+	function read(s)
+	{
+		var t = Date.parse(s);
+		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
+	}
+
+	return localRuntime.Native.Time.values = {
+		fpsWhen: F2(fpsWhen),
+		every: every,
+		toDate: function(t) { return new Date(t); },
+		read: read
+	};
+};
+
+Elm.Time = Elm.Time || {};
+Elm.Time.make = function (_elm) {
    "use strict";
-   _elm.Util = _elm.Util || {};
-   if (_elm.Util.values) return _elm.Util.values;
+   _elm.Time = _elm.Time || {};
+   if (_elm.Time.values) return _elm.Time.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
+   $Native$Signal = Elm.Native.Signal.make(_elm),
+   $Native$Time = Elm.Native.Time.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
    var _op = {};
-   var first = F2(function (f,_p0) {    var _p1 = _p0;return {ctor: "_Tuple2",_0: f(_p1._0),_1: _p1._1};});
-   var singleton = function (a) {    return _U.list([a]);};
-   var $const = F2(function (a,_p2) {    return a;});
-   var unless = function (b) {    return b ? $const($Task.succeed({ctor: "_Tuple0"})) : $Basics.identity;};
-   var when = function (_p3) {    return unless($Basics.not(_p3));};
-   return _elm.Util.values = {_op: _op,$const: $const,unless: unless,when: when,singleton: singleton,first: first};
+   var delay = $Native$Signal.delay;
+   var since = F2(function (time,signal) {
+      var stop = A2($Signal.map,$Basics.always(-1),A2(delay,time,signal));
+      var start = A2($Signal.map,$Basics.always(1),signal);
+      var delaydiff = A3($Signal.foldp,F2(function (x,y) {    return x + y;}),0,A2($Signal.merge,start,stop));
+      return A2($Signal.map,F2(function (x,y) {    return !_U.eq(x,y);})(0),delaydiff);
+   });
+   var timestamp = $Native$Signal.timestamp;
+   var every = $Native$Time.every;
+   var fpsWhen = $Native$Time.fpsWhen;
+   var fps = function (targetFrames) {    return A2(fpsWhen,targetFrames,$Signal.constant(true));};
+   var inMilliseconds = function (t) {    return t;};
+   var millisecond = 1;
+   var second = 1000 * millisecond;
+   var minute = 60 * second;
+   var hour = 60 * minute;
+   var inHours = function (t) {    return t / hour;};
+   var inMinutes = function (t) {    return t / minute;};
+   var inSeconds = function (t) {    return t / second;};
+   return _elm.Time.values = {_op: _op
+                             ,millisecond: millisecond
+                             ,second: second
+                             ,minute: minute
+                             ,hour: hour
+                             ,inMilliseconds: inMilliseconds
+                             ,inSeconds: inSeconds
+                             ,inMinutes: inMinutes
+                             ,inHours: inHours
+                             ,fps: fps
+                             ,fpsWhen: fpsWhen
+                             ,every: every
+                             ,timestamp: timestamp
+                             ,delay: delay
+                             ,since: since};
+};
+Elm.Date = Elm.Date || {};
+Elm.Date.make = function (_elm) {
+   "use strict";
+   _elm.Date = _elm.Date || {};
+   if (_elm.Date.values) return _elm.Date.values;
+   var _U = Elm.Native.Utils.make(_elm),$Native$Date = Elm.Native.Date.make(_elm),$Result = Elm.Result.make(_elm),$Time = Elm.Time.make(_elm);
+   var _op = {};
+   var millisecond = $Native$Date.millisecond;
+   var second = $Native$Date.second;
+   var minute = $Native$Date.minute;
+   var hour = $Native$Date.hour;
+   var dayOfWeek = $Native$Date.dayOfWeek;
+   var day = $Native$Date.day;
+   var month = $Native$Date.month;
+   var year = $Native$Date.year;
+   var fromTime = $Native$Date.fromTime;
+   var toTime = $Native$Date.toTime;
+   var fromString = $Native$Date.read;
+   var Dec = {ctor: "Dec"};
+   var Nov = {ctor: "Nov"};
+   var Oct = {ctor: "Oct"};
+   var Sep = {ctor: "Sep"};
+   var Aug = {ctor: "Aug"};
+   var Jul = {ctor: "Jul"};
+   var Jun = {ctor: "Jun"};
+   var May = {ctor: "May"};
+   var Apr = {ctor: "Apr"};
+   var Mar = {ctor: "Mar"};
+   var Feb = {ctor: "Feb"};
+   var Jan = {ctor: "Jan"};
+   var Sun = {ctor: "Sun"};
+   var Sat = {ctor: "Sat"};
+   var Fri = {ctor: "Fri"};
+   var Thu = {ctor: "Thu"};
+   var Wed = {ctor: "Wed"};
+   var Tue = {ctor: "Tue"};
+   var Mon = {ctor: "Mon"};
+   var Date = {ctor: "Date"};
+   return _elm.Date.values = {_op: _op
+                             ,fromString: fromString
+                             ,toTime: toTime
+                             ,fromTime: fromTime
+                             ,year: year
+                             ,month: month
+                             ,day: day
+                             ,dayOfWeek: dayOfWeek
+                             ,hour: hour
+                             ,minute: minute
+                             ,second: second
+                             ,millisecond: millisecond
+                             ,Jan: Jan
+                             ,Feb: Feb
+                             ,Mar: Mar
+                             ,Apr: Apr
+                             ,May: May
+                             ,Jun: Jun
+                             ,Jul: Jul
+                             ,Aug: Aug
+                             ,Sep: Sep
+                             ,Oct: Oct
+                             ,Nov: Nov
+                             ,Dec: Dec
+                             ,Mon: Mon
+                             ,Tue: Tue
+                             ,Wed: Wed
+                             ,Thu: Thu
+                             ,Fri: Fri
+                             ,Sat: Sat
+                             ,Sun: Sun};
 };
 Elm.Native.Json = {};
 
@@ -8149,6 +8394,39 @@ Elm.Json.Decode.make = function (_elm) {
                                     ,andThen: andThen
                                     ,value: value
                                     ,customDecoder: customDecoder};
+};
+Elm.Util = Elm.Util || {};
+Elm.Util.make = function (_elm) {
+   "use strict";
+   _elm.Util = _elm.Util || {};
+   if (_elm.Util.values) return _elm.Util.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var _op = {};
+   var decodeDate = A2($Json$Decode.andThen,
+   $Json$Decode.string,
+   function (date) {
+      var _p0 = $Date.fromString(date);
+      if (_p0.ctor === "Err") {
+            return $Json$Decode.fail(_p0._0);
+         } else {
+            return $Json$Decode.succeed(_p0._0);
+         }
+   });
+   var first = F2(function (f,_p1) {    var _p2 = _p1;return {ctor: "_Tuple2",_0: f(_p2._0),_1: _p2._1};});
+   var singleton = function (a) {    return _U.list([a]);};
+   var $const = F2(function (a,_p3) {    return a;});
+   var unless = function (b) {    return b ? $const($Task.succeed({ctor: "_Tuple0"})) : $Basics.identity;};
+   var when = function (_p4) {    return unless($Basics.not(_p4));};
+   return _elm.Util.values = {_op: _op,$const: $const,unless: unless,when: when,singleton: singleton,first: first,decodeDate: decodeDate};
 };
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
@@ -10201,162 +10479,6 @@ Elm.Native.Http.make = function(localRuntime) {
 	};
 };
 
-Elm.Native.Time = {};
-
-Elm.Native.Time.make = function(localRuntime)
-{
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Time = localRuntime.Native.Time || {};
-	if (localRuntime.Native.Time.values)
-	{
-		return localRuntime.Native.Time.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Maybe = Elm.Maybe.make(localRuntime);
-
-
-	// FRAMES PER SECOND
-
-	function fpsWhen(desiredFPS, isOn)
-	{
-		var msPerFrame = 1000 / desiredFPS;
-		var ticker = NS.input('fps-' + desiredFPS, null);
-
-		function notifyTicker()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-
-		function firstArg(x, y)
-		{
-			return x;
-		}
-
-		// input fires either when isOn changes, or when ticker fires.
-		// Its value is a tuple with the current timestamp, and the state of isOn
-		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
-
-		var initialState = {
-			isOn: false,
-			time: localRuntime.timer.programStart,
-			delta: 0
-		};
-
-		var timeoutId;
-
-		function update(input, state)
-		{
-			var currentTime = input._0;
-			var isOn = input._1;
-			var wasOn = state.isOn;
-			var previousTime = state.time;
-
-			if (isOn)
-			{
-				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
-			}
-			else if (wasOn)
-			{
-				clearTimeout(timeoutId);
-			}
-
-			return {
-				isOn: isOn,
-				time: currentTime,
-				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
-			};
-		}
-
-		return A2(
-			NS.map,
-			function(state) { return state.delta; },
-			A3(NS.foldp, F2(update), update(input.value, initialState), input)
-		);
-	}
-
-
-	// EVERY
-
-	function every(t)
-	{
-		var ticker = NS.input('every-' + t, null);
-		function tellTime()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-		var clock = A2(NS.map, fst, NS.timestamp(ticker));
-		setInterval(tellTime, t);
-		return clock;
-	}
-
-
-	function fst(pair)
-	{
-		return pair._0;
-	}
-
-
-	function read(s)
-	{
-		var t = Date.parse(s);
-		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
-	}
-
-	return localRuntime.Native.Time.values = {
-		fpsWhen: F2(fpsWhen),
-		every: every,
-		toDate: function(t) { return new Date(t); },
-		read: read
-	};
-};
-
-Elm.Time = Elm.Time || {};
-Elm.Time.make = function (_elm) {
-   "use strict";
-   _elm.Time = _elm.Time || {};
-   if (_elm.Time.values) return _elm.Time.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Native$Signal = Elm.Native.Signal.make(_elm),
-   $Native$Time = Elm.Native.Time.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var delay = $Native$Signal.delay;
-   var since = F2(function (time,signal) {
-      var stop = A2($Signal.map,$Basics.always(-1),A2(delay,time,signal));
-      var start = A2($Signal.map,$Basics.always(1),signal);
-      var delaydiff = A3($Signal.foldp,F2(function (x,y) {    return x + y;}),0,A2($Signal.merge,start,stop));
-      return A2($Signal.map,F2(function (x,y) {    return !_U.eq(x,y);})(0),delaydiff);
-   });
-   var timestamp = $Native$Signal.timestamp;
-   var every = $Native$Time.every;
-   var fpsWhen = $Native$Time.fpsWhen;
-   var fps = function (targetFrames) {    return A2(fpsWhen,targetFrames,$Signal.constant(true));};
-   var inMilliseconds = function (t) {    return t;};
-   var millisecond = 1;
-   var second = 1000 * millisecond;
-   var minute = 60 * second;
-   var hour = 60 * minute;
-   var inHours = function (t) {    return t / hour;};
-   var inMinutes = function (t) {    return t / minute;};
-   var inSeconds = function (t) {    return t / second;};
-   return _elm.Time.values = {_op: _op
-                             ,millisecond: millisecond
-                             ,second: second
-                             ,minute: minute
-                             ,hour: hour
-                             ,inMilliseconds: inMilliseconds
-                             ,inSeconds: inSeconds
-                             ,inMinutes: inMinutes
-                             ,inHours: inHours
-                             ,fps: fps
-                             ,fpsWhen: fpsWhen
-                             ,every: every
-                             ,timestamp: timestamp
-                             ,delay: delay
-                             ,since: since};
-};
 Elm.Http = Elm.Http || {};
 Elm.Http.make = function (_elm) {
    "use strict";
@@ -12516,116 +12638,6 @@ Elm.OnePageStack.Provider.Post.make = function (_elm) {
    });
    return _elm.OnePageStack.Provider.Post.values = {_op: _op,fetchPost: fetchPost};
 };
-Elm.Native.Date = {};
-Elm.Native.Date.make = function(localRuntime) {
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Date = localRuntime.Native.Date || {};
-	if (localRuntime.Native.Date.values)
-	{
-		return localRuntime.Native.Date.values;
-	}
-
-	var Result = Elm.Result.make(localRuntime);
-
-	function readDate(str)
-	{
-		var date = new Date(str);
-		return isNaN(date.getTime())
-			? Result.Err('unable to parse \'' + str + '\' as a date')
-			: Result.Ok(date);
-	}
-
-	var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-	var monthTable =
-		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-		 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-
-	return localRuntime.Native.Date.values = {
-		read: readDate,
-		year: function(d) { return d.getFullYear(); },
-		month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
-		day: function(d) { return d.getDate(); },
-		hour: function(d) { return d.getHours(); },
-		minute: function(d) { return d.getMinutes(); },
-		second: function(d) { return d.getSeconds(); },
-		millisecond: function(d) { return d.getMilliseconds(); },
-		toTime: function(d) { return d.getTime(); },
-		fromTime: function(t) { return new Date(t); },
-		dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
-	};
-};
-
-Elm.Date = Elm.Date || {};
-Elm.Date.make = function (_elm) {
-   "use strict";
-   _elm.Date = _elm.Date || {};
-   if (_elm.Date.values) return _elm.Date.values;
-   var _U = Elm.Native.Utils.make(_elm),$Native$Date = Elm.Native.Date.make(_elm),$Result = Elm.Result.make(_elm),$Time = Elm.Time.make(_elm);
-   var _op = {};
-   var millisecond = $Native$Date.millisecond;
-   var second = $Native$Date.second;
-   var minute = $Native$Date.minute;
-   var hour = $Native$Date.hour;
-   var dayOfWeek = $Native$Date.dayOfWeek;
-   var day = $Native$Date.day;
-   var month = $Native$Date.month;
-   var year = $Native$Date.year;
-   var fromTime = $Native$Date.fromTime;
-   var toTime = $Native$Date.toTime;
-   var fromString = $Native$Date.read;
-   var Dec = {ctor: "Dec"};
-   var Nov = {ctor: "Nov"};
-   var Oct = {ctor: "Oct"};
-   var Sep = {ctor: "Sep"};
-   var Aug = {ctor: "Aug"};
-   var Jul = {ctor: "Jul"};
-   var Jun = {ctor: "Jun"};
-   var May = {ctor: "May"};
-   var Apr = {ctor: "Apr"};
-   var Mar = {ctor: "Mar"};
-   var Feb = {ctor: "Feb"};
-   var Jan = {ctor: "Jan"};
-   var Sun = {ctor: "Sun"};
-   var Sat = {ctor: "Sat"};
-   var Fri = {ctor: "Fri"};
-   var Thu = {ctor: "Thu"};
-   var Wed = {ctor: "Wed"};
-   var Tue = {ctor: "Tue"};
-   var Mon = {ctor: "Mon"};
-   var Date = {ctor: "Date"};
-   return _elm.Date.values = {_op: _op
-                             ,fromString: fromString
-                             ,toTime: toTime
-                             ,fromTime: fromTime
-                             ,year: year
-                             ,month: month
-                             ,day: day
-                             ,dayOfWeek: dayOfWeek
-                             ,hour: hour
-                             ,minute: minute
-                             ,second: second
-                             ,millisecond: millisecond
-                             ,Jan: Jan
-                             ,Feb: Feb
-                             ,Mar: Mar
-                             ,Apr: Apr
-                             ,May: May
-                             ,Jun: Jun
-                             ,Jul: Jul
-                             ,Aug: Aug
-                             ,Sep: Sep
-                             ,Oct: Oct
-                             ,Nov: Nov
-                             ,Dec: Dec
-                             ,Mon: Mon
-                             ,Tue: Tue
-                             ,Wed: Wed
-                             ,Thu: Thu
-                             ,Fri: Fri
-                             ,Sat: Sat
-                             ,Sun: Sun};
-};
 Elm.OnePageStack = Elm.OnePageStack || {};
 Elm.OnePageStack.Provider = Elm.OnePageStack.Provider || {};
 Elm.OnePageStack.Provider.Index = Elm.OnePageStack.Provider.Index || {};
@@ -12690,7 +12702,8 @@ Elm.OnePageStack.Provider.Projects.make = function (_elm) {
    $Path$Url = Elm.Path.Url.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
+   $Task = Elm.Task.make(_elm),
+   $Util = Elm.Util.make(_elm);
    var _op = {};
    var Project = function (a) {
       return function (b) {
@@ -12707,21 +12720,36 @@ Elm.OnePageStack.Provider.Projects.make = function (_elm) {
                                        return function (m) {
                                           return function (n) {
                                              return function (o) {
-                                                return {id: a
-                                                       ,name: b
-                                                       ,fullName: c
-                                                       ,description: d
-                                                       ,starts: e
-                                                       ,watchers: f
-                                                       ,forks: g
-                                                       ,language: h
-                                                       ,isFork: i
-                                                       ,htmlUrl: j
-                                                       ,homepage: k
-                                                       ,hasIssues: l
-                                                       ,hasPages: m
-                                                       ,hasWiki: n
-                                                       ,createdAt: o};
+                                                return function (p) {
+                                                   return function (q) {
+                                                      return function (r) {
+                                                         return function (s) {
+                                                            return function (t) {
+                                                               return {id: a
+                                                                      ,name: b
+                                                                      ,fullName: c
+                                                                      ,description: d
+                                                                      ,stars: e
+                                                                      ,watchers: f
+                                                                      ,forks: g
+                                                                      ,language: h
+                                                                      ,isFork: i
+                                                                      ,htmlUrl: j
+                                                                      ,homepage: k
+                                                                      ,hasIssues: l
+                                                                      ,hasPages: m
+                                                                      ,hasWiki: n
+                                                                      ,createdAt: o
+                                                                      ,forksUrl: p
+                                                                      ,starsUrl: q
+                                                                      ,watchUrl: r
+                                                                      ,pushedAt: s
+                                                                      ,languagesUrl: t};
+                                                            };
+                                                         };
+                                                      };
+                                                   };
+                                                };
                                              };
                                           };
                                        };
@@ -12748,25 +12776,26 @@ Elm.OnePageStack.Provider.Projects.make = function (_elm) {
    A2($Json$Decode._op[":="],"watchers_count",$Json$Decode.$int),
    A2($Json$Decode._op[":="],"forks_count",$Json$Decode.$int),
    $Json$Decode.maybe(A2($Json$Decode._op[":="],"language",$Json$Decode.string))),
-   function (f) {
-      return A8($Json$Decode.object7,
-      f,
+   function (f1) {
+      return A2($Json$Decode.andThen,
+      A9($Json$Decode.object8,
+      f1,
       A2($Json$Decode._op[":="],"fork",$Json$Decode.bool),
       A2($Json$Decode._op[":="],"html_url",$Json$Decode.string),
       $Json$Decode.maybe(A2($Json$Decode._op[":="],"homepage",$Json$Decode.string)),
       A2($Json$Decode._op[":="],"has_issues",$Json$Decode.bool),
       A2($Json$Decode._op[":="],"has_pages",$Json$Decode.bool),
       A2($Json$Decode._op[":="],"has_wiki",$Json$Decode.bool),
-      A2($Json$Decode.andThen,
-      A2($Json$Decode._op[":="],"created_at",$Json$Decode.string),
-      function (date) {
-         var _p0 = $Date.fromString(date);
-         if (_p0.ctor === "Err") {
-               return $Json$Decode.fail(_p0._0);
-            } else {
-               return $Json$Decode.succeed(_p0._0);
-            }
-      }));
+      A2($Json$Decode._op[":="],"created_at",$Util.decodeDate),
+      A2($Json$Decode._op[":="],"forks_url",$Json$Decode.string)),
+      function (f2) {
+         return A5($Json$Decode.object4,
+         f2,
+         A2($Json$Decode._op[":="],"stargazers_url",$Json$Decode.string),
+         A2($Json$Decode._op[":="],"subscription_url",$Json$Decode.string),
+         A2($Json$Decode._op[":="],"pushed_at",$Util.decodeDate),
+         $Json$Decode.maybe(A2($Json$Decode._op[":="],"languages_url",$Json$Decode.string)));
+      });
    });
    var fetchProjects = F2(function (basePath,user) {
       return A2($Task.mapError,
@@ -12863,39 +12892,108 @@ Elm.Template.make = function (_elm) {
                       ,footerBlock(_U.list([$Html.text("")]))
                       ,footerBlock(_U.list([$Html.text("©️ 2016 Justus Adam")]))]))]))]))));
    };
+   var renderProjects = F2(function (i,projects) {
+      var bisectList = function (l) {
+         var _p8 = l;
+         if (_p8.ctor === "[]") {
+               return _U.list([]);
+            } else {
+               if (_p8._1.ctor === "[]") {
+                     return _U.list([_U.list([_p8._0])]);
+                  } else {
+                     return A2($List._op["::"],_U.list([_p8._0,_p8._1._0]),bisectList(_p8._1._1));
+                  }
+            }
+      };
+      var toRow = function (e) {    return A2($Html.div,_U.list([$Html$Attributes.$class("row")]),A2($Basics._op["++"],e,_U.list([clearfix])));};
+      var renderProject = function (project) {
+         var language = function () {
+            var _p9 = project.language;
+            if (_p9.ctor === "Just") {
+                  return _U.list([A2($Html.span,_U.list([$Html$Attributes.$class("language")]),_U.list([$Html.text(_p9._0)]))]);
+               } else {
+                  return _U.list([]);
+               }
+         }();
+         return _U.list([A2($Html.div,
+                        _U.list([]),
+                        A2($Basics._op["++"],
+                        language,
+                        _U.list([A2($Html.span,
+                                _U.list([$Html$Attributes.$class("stats")]),
+                                _U.list([A2($Html.a,
+                                        _U.list([$Html$Attributes.$class("stars"),$Html$Attributes.href(project.starsUrl)]),
+                                        _U.list([A2($Html.span,_U.list([$Html$Attributes.$class("name")]),_U.list([$Html.text("Stars")]))
+                                                ,A2($Html.span,
+                                                _U.list([$Html$Attributes.$class("count")]),
+                                                _U.list([$Html.text($Basics.toString(project.stars))]))]))
+                                        ,A2($Html.a,
+                                        _U.list([$Html$Attributes.$class("watchers"),$Html$Attributes.href(project.watchUrl)]),
+                                        _U.list([A2($Html.span,_U.list([$Html$Attributes.$class("name")]),_U.list([$Html.text("Watchers")]))
+                                                ,A2($Html.span,
+                                                _U.list([$Html$Attributes.$class("count")]),
+                                                _U.list([$Html.text($Basics.toString(project.watchers))]))]))
+                                        ,A2($Html.a,
+                                        _U.list([$Html$Attributes.$class("forks"),$Html$Attributes.href(project.forksUrl)]),
+                                        _U.list([A2($Html.span,_U.list([$Html$Attributes.$class("name")]),_U.list([$Html.text("Forks")]))
+                                                ,A2($Html.span,
+                                                _U.list([$Html$Attributes.$class("count")]),
+                                                _U.list([$Html.text($Basics.toString(project.forks))]))]))]))
+                                ,clearfix])))
+                        ,A2($Html.h3,
+                        _U.list([$Html$Attributes.$class("heading")]),
+                        _U.list([A2($Html.a,
+                        _U.list([$Html$Attributes.href(project.htmlUrl)]),
+                        _U.list([$Html.text(A2($Basics._op["++"],project.name,project.isFork ? " (fork)" : ""))]))]))
+                        ,A2($Html.p,_U.list([]),_U.list([$Html.text(project.description)]))]);
+      };
+      var projectList = A2($Html.div,
+      _U.list([$Html$Attributes.$class("project-list")]),
+      A2($List.map,
+      toRow,
+      bisectList(A2($List.map,
+      function (_p10) {
+         return A2($Html.div,_U.list([$Html$Attributes.$class("project")]),$Util.singleton(A2($Html.div,_U.list([$Html$Attributes.$class("wrapper")]),_p10)));
+      },
+      A2($List.map,
+      renderProject,
+      $List.reverse(A2($List.sortWith,
+      F2(function (projA,projB) {
+         var _p11 = A2($Basics.compare,projA.stars,projB.stars);
+         if (_p11.ctor === "EQ") {
+               return A2($Basics.compare,$Date.toTime(projA.createdAt),$Date.toTime(projB.createdAt));
+            } else {
+               return _p11;
+            }
+      }),
+      projects)))))));
+      var content = A2($Html.article,_U.list([]),_U.list([projectList,clearfix]));
+      return $Task.succeed(pageTemplate({$interface: i,title: $Maybe.Just("My Projects"),content: content}));
+   });
    var postTemplate = function (pi) {
-      var _p8 = pi;
-      var content = _p8.content;
+      var _p12 = pi;
+      var content = _p12.content;
       var newContent = A2($Html.div,_U.list([]),_U.list([A2($Html.article,_U.list([]),_U.list([content]))]));
       return pageTemplate(_U.update(pi,{content: newContent}));
    };
-   var renderProjects = F2(function (i,projects) {
-      var renderProject = function (project) {
-         return _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text(project.name)])),A2($Html.p,_U.list([]),_U.list([$Html.text(project.description)]))]);
-      };
-      var c = A2($Html.ul,
-      _U.list([$Html$Attributes.$class("project-list")]),
-      A2($List.map,$Html.li(_U.list([$Html$Attributes.$class("project")])),A2($List.map,renderProject,projects)));
-      return $Task.succeed(postTemplate({$interface: i,title: $Maybe.Just("My Projects"),content: c}));
-   });
    var renderPost = F2(function (i,c) {    return $Task.succeed(postTemplate({content: c,$interface: i,title: $Maybe.Nothing}));});
-   var indexTemplate = function (_p9) {
-      var _p10 = _p9;
-      var _p11 = _p10.pageInformation;
+   var indexTemplate = function (_p13) {
+      var _p14 = _p13;
+      var _p15 = _p14.pageInformation;
       var newContent = A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.section,_U.list([$Html$Attributes.$class("main-content")]),_U.list([_p11.content]))
+      _U.list([A2($Html.section,_U.list([$Html$Attributes.$class("main-content")]),_U.list([_p15.content]))
               ,A2($Html.div,
               _U.list([$Html$Attributes.$class("sidebar-container")]),
               _U.list([A2($Html.div,
               _U.list([$Html$Attributes.$class("sidebar")]),
-              _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text("\"News\"")])),_p10.sidebar]))]))
+              _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text("\"News\"")])),_p14.sidebar]))]))
               ,clearfix]));
-      return pageTemplate(_U.update(_p11,{content: newContent}));
+      return pageTemplate(_U.update(_p15,{content: newContent}));
    };
    var renderIndex = F3(function (basePath,i,postData) {
-      var _p12 = i;
-      var navigator = _p12.navigator;
+      var _p16 = i;
+      var navigator = _p16.navigator;
       var content = A2($Html.ul,
       _U.list([$Html$Attributes.$class("post-list")]),
       A2($List.map,
@@ -12907,15 +13005,15 @@ Elm.Template.make = function (_elm) {
          A2($Basics._op["++"],
          _U.list([A2($Html.h3,_U.list([]),_U.list([$Html.text(pm.title)]))]),
          function () {
-            var _p13 = pm.description;
-            if (_p13.ctor === "Nothing") {
+            var _p17 = pm.description;
+            if (_p17.ctor === "Nothing") {
                   return _U.list([]);
                } else {
-                  return _U.list([A2($Html.p,_U.list([$Html$Attributes.$class("description")]),_U.list([$Html.text(_p13._0)]))]);
+                  return _U.list([A2($Html.p,_U.list([$Html$Attributes.$class("description")]),_U.list([$Html.text(_p17._0)]))]);
                }
          }()))]));
       },
-      $List.reverse(A2($List.sortBy,function (_p14) {    return $Date.toTime(function (_) {    return _.date;}(_p14));},postData))));
+      $List.reverse(A2($List.sortBy,function (_p18) {    return $Date.toTime(function (_) {    return _.date;}(_p18));},postData))));
       return A3($Basics.flip,
       $Task.map,
       sidebar(basePath),
