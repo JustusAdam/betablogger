@@ -8,6 +8,7 @@ import Task
 import Debug
 import Path.Url exposing ((</>), addExtension)
 import Date exposing (Date)
+import Util
 
 
 type alias Project =
@@ -15,7 +16,7 @@ type alias Project =
   , name : String
   , fullName : String
   , description : String
-  , starts : Int
+  , stars : Int
   , watchers : Int
   , forks : Int
   , language : Maybe String
@@ -26,7 +27,14 @@ type alias Project =
   , hasPages : Bool
   , hasWiki : Bool
   , createdAt : Date
+  , forksUrl : String
+  , starsUrl : String
+  , watchUrl : String
+  , pushedAt : Date
+  , languagesUrl : Maybe String
   }
+
+
 
 projectDecoder : Decode.Decoder Project
 projectDecoder =
@@ -39,18 +47,24 @@ projectDecoder =
     ("watchers_count" := Decode.int)
     ("forks_count" := Decode.int)
     (Decode.maybe ("language" := Decode.string))
-  `Decode.andThen` \f ->
-  Decode.object7 f
+  `Decode.andThen` \f1 ->
+  Decode.object8 f1
     ("fork" := Decode.bool)
     ("html_url" := Decode.string)
     (Decode.maybe ("homepage" := Decode.string))
     ("has_issues" := Decode.bool)
     ("has_pages" := Decode.bool)
     ("has_wiki" := Decode.bool)
-    (("created_at" := Decode.string)
-    `Decode.andThen` \date -> case Date.fromString date of
-                                Err e -> Decode.fail e
-                                Ok v -> Decode.succeed v)
+    ("created_at" := Util.decodeDate)
+    ("forks_url" := Decode.string)
+    `Decode.andThen` \f2 ->
+    Decode.object4
+      f2
+      ("stargazers_url" := Decode.string)
+      ("subscription_url" := Decode.string)
+      ("pushed_at" := Util.decodeDate)
+      (Decode.maybe ("languages_url" := Decode.string))
+
 
 
 

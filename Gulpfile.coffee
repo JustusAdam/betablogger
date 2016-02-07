@@ -20,9 +20,20 @@ gulp.task 'elm', ['elm-init'], ->
 
 
 gulp.task 'github-data', (finish) ->
-  child = cp.spawn 'curl', ['https://api.github.com/users/JustusAdam/repos']
+  if not fs.existsSync('blog-data/github-data')
+    fs.mkdirSync('blog-data/github-data')
+
+  page = 'https://api.github.com/users/JustusAdam/repos?per_page=100'
+
+  proc = cp.spawn 'curl', [page]
+
   writer = fs.createWriteStream('blog-data/github-data/JustusAdam.json')
-  child.stdout.pipe(writer)
+
+  proc.stdout.pipe writer
+
 
 
 gulp.task 'default', ['css', 'elm', 'github-data']
+
+
+gulp.task 'build', ['css', 'elm']
