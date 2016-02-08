@@ -14,13 +14,11 @@ Also in this article I deliberately try to make programs fail and break which is
 
 David Beazley also mentions in his talk that the instance actually recording imported modules is located in `sys.modules` which happens to be a standard python dict.
 
-The interesting thing about that is that unlike `mappingproxy` which is the dict-like object/wrapper/imitator that a lot of the builtin data structures (such as the `dict` itself) use to imitate a dict while avoiding modification[^1] and infinite recursion[^2] this `sys.modules` standard dict supports item assignment `__setitem__` as well as deletion `__delitem__`.
+The interesting thing about that is that unlike `mappingproxy` which is the dict-like object/wrapper/imitator that a lot of the builtin data structures (such as the `dict` itself) use to imitate a dict while avoiding modification and infinite recursion this `sys.modules` standard dict supports item assignment `__setitem__` as well as deletion `__delitem__`.
 
-[^1]:
-    `dict.__dict__.__getitem__ = 8` results in `AttributeError: 'mappingproxy' object attribute '__getitem__' is read-only`
+**Note:** `dict.__dict__.__getitem__ = 8` results in `AttributeError: 'mappingproxy' object attribute '__getitem__' is read-only`
 
-[^2]:
-    Otherwise any `dict` would have an instance dict `dict.__dict__` which would have an instance dict `dict.__dict.__.__dict__` of type dict which would have an instance dict and so on.
+**Note:** Otherwise any `dict` would have an instance dict `dict.__dict__` which would have an instance dict `dict.__dict.__.__dict__` of type dict which would have an instance dict and so on.
 
 This got me thinking "How much does the sys.modules dict actually influence the import process." and as it turns out a lot and it allows you to mess with it.
 
@@ -28,7 +26,7 @@ If you import a module, let's call it `test`, modify the file and import again (
 
 The answer: nothing at first. The code still runs, all functions that were in the module previously are still there, as is the module itself, __but__ something odd happens if you execute `import test` again: it reimports the module.
 
-{% highlight python %}
+```python
 # module test
 
 def hello():
@@ -53,11 +51,9 @@ False
 >>> test.hello()  # and voila, new an shiny
 hello
 
-{% endhighlight %}
-[^dirty_import]
+```
 
-[^dirty_import]:
-    The reason why calling `foo.hello` refers to the new code instead of the old one, is because `import` overwrites it's value in our current `globals()` dict when we use it. As such it reloads the module for whatevernamespace we happened to be in.
+The reason why calling `foo.hello` refers to the new code instead of the old one, is because `import` overwrites it's value in our current `globals()` dict when we use it. As such it reloads the module for whatever namespace we happened to be in.
 
 ## Consequences
 
@@ -67,7 +63,7 @@ The difference between reloading the module this way, which I do not recommend a
 
 Let's suppose we have two modules `foo.py` and `bar.py` where `bar` imports `foo` and uses a function defined therein:
 
-{% highlight python %}
+```python
 # foo.py
 
 def hello():
@@ -80,11 +76,11 @@ import foo
 def hello_bar():
     foo.hello()
 
-{% endhighlight %}
+```
 
 We can then do the following experiment:
 
-{% highlight python %}
+```python
 
 >>> import foo, bar
 >>> bar.hello_bar()
@@ -99,16 +95,16 @@ hello everyone
 >>> foo.hello()
 hello everyone
 
-{% endhighlight %}
+```
 
-As you can see using `importlib.reload` reloads the module and references to the module are updated as well.[^3] This behavior is different if you reload using our dirty little trick.
-
-[^3]:
-    This does not work if you reassign contents of the imported module. I you do something like `var = module.other_var` change the value of `other_var` and reload `var` will still have the old value. That applies to functions and variables as well as `from module import symbol` imports.
-    From this I can only assume that `importlib.reload` changes the module object in place rather than replace it.
+As you can see using `importlib.reload` reloads the module and references to the module are updated as well. This behavior is different if you reload using our dirty little trick.
 
 
-{% highlight python %}
+This does not work if you reassign contents of the imported module. I you do something like `var = module.other_var` change the value of `other_var` and reload `var` will still have the old value. That applies to functions and variables as well as `from module import symbol` imports.
+From this I can only assume that `importlib.reload` changes the module object in place rather than replace it.
+
+
+```python
 
 >>> import foo, bar
 >>> bar.hello_bar()
@@ -124,7 +120,7 @@ hello
 >>> foo.hello()
 hello everyone
 
-{% endhighlight %}
+```
 
 Here the reference to `foo` in `bar` is not being updated which seems to indicate that this `import` is overwriting the definition of the module wherever it is being kept and the old version of the code remains in the `globals()` dicts of the modules using it.
 
@@ -134,7 +130,7 @@ As we have seen deleting entries in `sys.modules` causes the interpreter to relo
 
 Well, `sys.modules` contains references to already imported modules. You can query it on the type of the entries and it tells you that the entries are actual modules, the same class/type you'd obtain when querying the module directly.
 
-{% highlight python %}
+```python
 
 >>> import foo
 >>> import sys
@@ -145,22 +141,22 @@ Well, `sys.modules` contains references to already imported modules. You can que
 >>> type(foo) == type(sys.modules['foo'])
 True
 
-{% endhighlight %}
+```
 
 In fact the module reference in `sys.modules` is the the exact same object as your module itself.
 
-{% highlight python %}
+```python
 
 >>> sys.modules['foo'] == foo
 True
 >>> sys.modules['foo'] is foo
 True
 
-{% endhighlight %}
+```
 
 Knowing all this, here is a very crude sketch of how the `__import__` function in python works which is the implementation of the `import` statement.
 
-{% highlight python %}
+```python
 
 import sys
 
@@ -174,11 +170,9 @@ def __import__(name, globals=None, locals=None, fromlist=(), level=0):
 
     return sys.modules[name]
 
-{% endhighlight %}[^4]
+```
 
-
-[^4]:
-    This, again, is not the actual implementation of the `__import__` function but rather a __very__ crude approximation for the purposes of this article. For instance this function could not deal at all with importing submodules, such as `foo.bar`
+This, again, is not the actual implementation of the `__import__` function but rather a __very__ crude approximation for the purposes of this article. For instance this function could not deal at all with importing submodules, such as `foo.bar`
 
 Now if we were to delete the entry from `sys.modules` `__import__` would do the expensive import of the file again, since it cannot find the module in `sys.modules`. It then returns the new module and adds the reference to `sys.modules` which then would also point to the new module, however any module that imported `name` previously still has a reference to the module object in its `globals()` (or `__dict__` if you prefer) dict and as such runs the old code.
 
@@ -192,7 +186,7 @@ As for the behavior of `importlib.reload`, it reloads the module back into the o
 
 What it doesn't do however is remove any keys. This means if you imported a module `bar` with a function `hello` and you were to edit the file, removing the function entirely or commenting it out and then reimport the module using `importlib.reload` the new module object `bar` still has the `hello` attribute with the original function in it.
 
-{% highlight python %}
+```python
 
 >>> import foo, bar
 >>> bar.hello()
@@ -205,7 +199,7 @@ hello
 hello
 >>>
 
-{% endhighlight %}
+```
 
 ## Conclusions
 
@@ -225,7 +219,7 @@ Good luck, have fun and remember that `collections` is worth a look and use `yie
 #### What happens with `importlib.reload` when you delete the module from `sys.modules`?
 It fails. In order to reload the module it must be in `sys.modules`.
 
-{% highlight python %}
+```python
 
 >>> del sys.modules['bar']
 >>> 'bar' in sys.modules
@@ -237,13 +231,13 @@ Traceback (most recent call last):
     raise ImportError(msg.format(name), name=name)
 ImportError: module bar not in sys.modules
 
-{% endhighlight %}
+```
 
 The same applies if you reassign `sys.modules['bar'] = foo`. You'll get the exact same error.
 
 #### My crude implementation of `importlib.reload`
 
-{% highlight python %}
+```python
 
 def reload(module):
     file_name = module.__file__
@@ -260,8 +254,6 @@ def reload(module):
 
     return module
 
-{% endhighlight %}
-[^reload_impl]
+```
 
-[^reload_impl]:
-    Again, this is not the official implementation and strongly simplified. It also does not interact with `sys.modules`, which we know it should/does, and it again only works for top-level modules. It is only here to illustrate how some of the behavior of the function could be implemented in python not how it is actually done.
+Again, this is not the official implementation and strongly simplified. It also does not interact with `sys.modules`, which we know it should/does, and it again only works for top-level modules. It is only here to illustrate how some of the behavior of the function could be implemented in python not how it is actually done.

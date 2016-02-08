@@ -4,25 +4,24 @@ So the [Jekyll](//jekyllrb.com) default installation using `jekyll new` is, albe
 
 Mostly I felt like there was a lot of unused space on the index page, so I started to customize the index.html and added a `sidebar-right.html` file to include in the index page (modular is always good).
 
-{% highlight html %}
+```html
 <div class="sidebar-right sidebar"></div>
-{% endhighlight %}
+```
 
 And I added some content in the form of short FAQ-like messages titled "Did you know ...".
 
-{% highlight html %}
+```html
 <div class="sidebar-right sidebar right column-4">
   <p>Did you know ...</p>
   <ul class="fact-list smaller">
     ...
   </ul>
 </div>
-{% endhighlight %}
+```
 
 But I wasn't satisfied. There were a lot of big and ugly `<a>` tags in there  and the whole thing felt so ... static. Actually writing a `<ul>` element by hand in html felt just ... wrong. Fortunately I had just learnt about [jekyll collections](https://jekyllrb.com/docs/collections/) and was using them to create some [project pages](/projects/). So I created a new collection called 'quick_facts' and refactored the messages into individual `.md`'s containing markdown source for the messages, plus the YAML Front Matter and added this little line instead of the giant blobs of text from before.
 
-{% highlight html %}
-{% raw %}
+```html
 <ul class="fact-list smaller">
   {% for fact in site.quick_facts %}
 
@@ -30,8 +29,7 @@ But I wasn't satisfied. There were a lot of big and ugly `<a>` tags in there  an
 
   {% endfor %}
 </ul>
-{% endraw %}
-{% endhighlight %}
+```
 
 The `if forloop.last` block adds a 'last' class to the last element to allow me to add some pretty separators using `border-bottom`.
 
@@ -44,21 +42,19 @@ On the website I've had before I was using [Drupal](//drupal.org) which by defau
 
 But I wanted to do more, or more precisely I didn't realize at first that Jekyll offers an `excerpt` attribute on he document objects and so I added something of my own making.
 
-{% highlight html %}
-{% raw %}
+
+```html
 {% if post.description %}
 <p class="small light-font">
   {{ post.description | truncate: 100, '...' }}
 </p>
-{% endraw %}
-{% endhighlight %}
+```
 
 Which would, if a document object had a `description` attribute print the first 100 characters of it in a smaller, lighter font.
 
 However I discovered that the document objects actually have an `excerpt` attribute which will generate a teaser based on the content itself, so I combined the two. Furthermore I found out that you can simply add your own custom variables to the `_config.yml` which will then be available via the `site` attribute, so I refactored the teaser length such that it is set in the main config as `quick_view_length`. And here's the final result:
 
-{% highlight html %}
-{% raw %}
+```html
 {% if post.description %}
   {% assign desc = post.description %}
 {% else %}
@@ -67,8 +63,7 @@ However I discovered that the document objects actually have an `excerpt` attrib
   <p class="small light-font">
     {{ desc | truncate: site.quick_view_length, '...' }}
   </p>
-{% endraw %}
-{% endhighlight %}
+```
 
 Now it will either print the first paragraph of the page (jekyll's default `excerpt` style) or a custom description, if you provide one, perhaps if the first paragraph is not very representative of the rest of the content.
 

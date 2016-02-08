@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Dict exposing (Dict)
 import Maybe exposing (withDefault)
+import Maybe.Extra exposing (or)
 import Http
 import Erl
 import Path.Url exposing ((</>))
@@ -23,6 +24,7 @@ import Date
 type alias PageInformation =
   { interface : AppInterface
   , title : Maybe String
+  , subtitle : Maybe String
   , content : Html
   }
 
@@ -54,9 +56,10 @@ renderIndex basePath i postData =
       indexTemplate
         { sidebar = sb
         , pageInformation =
-          { title = Just "Welcome to my blog"
+          { title = Just "Hi, how are you?"
           , interface = i
           , content = content
+          , subtitle = Nothing
           }
         }
 
@@ -118,12 +121,17 @@ renderProjects i projects =
         (x::x'::xs) -> [x,x']::bisectList xs
   in
     Task.succeed <|
-      pageTemplate { interface = i, title = Just "My Projects", content = content }
+      pageTemplate
+        { interface = i
+        , title = Just "Projects"
+        , content = content
+        , subtitle = Just "What I am/was/will be working on"
+        }
 
 
-renderPost : AppInterface -> Html -> Task.Task String Html
-renderPost i c = Task.succeed <|
-  postTemplate { content = c, interface = i, title = Nothing }
+renderPost : AppInterface -> (Html, Maybe String, Maybe String) -> Task.Task String Html
+renderPost i (c, title, desc) = Task.succeed <|
+  postTemplate { content = c, interface = i, title = title, subtitle = desc }
 
 
 sidebar : String -> Task.Task String Html
@@ -160,13 +168,23 @@ footerBlock inner =
 
 
 pageTemplate : PageInformation -> Html
-pageTemplate { interface, title, content } =
+pageTemplate { interface, title, subtitle, content } =
   div
     [ class "page-container" ]
     <| headerImpl interface
-    :: (case title of
-          Just t -> [header [] [ div [ class "center-block" ] [ h1 [] [ text t ] ] ]]
-          Nothing -> [])
+    :: (case title `or` subtitle of
+          Nothing -> []
+          Just _ ->
+            let
+              titleH = Maybe.map (\t -> [ h1 [] [ text t ] ]) title
+                       |> withDefault []
+              subtitleH = Maybe.map (\st ->
+                            [ div [ class "subtitle"] [ text st ] ]) subtitle
+                          |> withDefault []
+            in
+              [ header []
+                [ div [ class "center-block" ] <| titleH ++ subtitleH ]
+              ])
     ++
     [ div [ class "center-block" ]
       [ content ]
@@ -218,4 +236,4 @@ indexTemplate { sidebar, pageInformation } =
         , clearfix
         ]
   in
-    pageTemplate { pageInformation | content = newContent}
+    pageTemplate { pageInformation | content = newContent }

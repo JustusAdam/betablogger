@@ -36,7 +36,7 @@ projectProvider basePath user = mkProvider (\_ _ -> fetchProjects basePath user)
 
 providers : Providers
 providers = Dict.fromList
-  [ "post" => postProvider (basePath </> "posts")
+  [ "post" => postProvider basePath
   , "" => indexProvider basePath
   , "projects" => projectProvider basePath "JustusAdam"
   ]
