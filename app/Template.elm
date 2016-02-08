@@ -121,9 +121,9 @@ renderProjects i projects =
       pageTemplate { interface = i, title = Just "My Projects", content = content }
 
 
-renderPost : AppInterface -> Html -> Task.Task String Html
-renderPost i c = Task.succeed <|
-  postTemplate { content = c, interface = i, title = Nothing }
+renderPost : AppInterface -> (Html, Maybe String, Maybe String) -> Task.Task String Html
+renderPost i (c, title, desc) = Task.succeed <|
+  postTemplate { content = c, interface = i, title = title }
 
 
 sidebar : String -> Task.Task String Html

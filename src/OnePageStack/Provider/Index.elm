@@ -1,4 +1,9 @@
-module OnePageStack.Provider.Index (fetchIndex, PostMeta) where
+module OnePageStack.Provider.Index
+  ( fetchIndex
+  , PostMeta
+  , postMetaUrl
+  , postMetaDecoder
+  ) where
 
 import Task exposing (Task)
 import Json.Decode as Decode exposing ((:=))
@@ -16,6 +21,9 @@ type alias PostMeta =
   , description : Maybe String
   , date : Date
   }
+
+
+postMetaUrl basePath = basePath </> "posts.json"
 
 
 fetchIndex : String -> AppInterface -> Task String (List PostMeta)
