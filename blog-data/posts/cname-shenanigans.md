@@ -6,10 +6,7 @@ In order to add a custom domain to a GitHub page you have to configure the appro
 
 So I registered a CNAME entry with united domains. The domain resolved as expected and the address bar in the browser was showing the right thing (the custom domain), everything seemed right with the world.
 
-Then I tried to set up email with the new domain, as I had done with the other domain before by setting an MX entry pointing to the uberspace mailserver. It didn't work. I sent a few test mails, none of them arrived. The SMTP server tried three times and eventually gave up. Every mail was getting dropped. I changed the entry and redirected to gmail instead, that seemed to work[^gmail].
-
-[^gmail]:
-    Knowing what I know now it might be that I am not remembering the timeline correctly and it might be I had the email redirect **before** I set the CNAME entry for the site and changed it to an MX later, that would make more sense at least.
+Then I tried to set up email with the new domain, as I had done with the other domain before by setting an MX entry pointing to the uberspace mailserver. It didn't work. I sent a few test mails, none of them arrived. The SMTP server tried three times and eventually gave up. Every mail was getting dropped. I changed the entry and redirected to gmail instead, that seemed to work.
 
 I could not figure out what was causing the issue. I decided it probably was the mailserver that for some reason could not deal with the new domain ending, a claim that, as I realize now, was pretty stupid. I decided to leave it for now, since in my mind the error did not appear to be on my side and I did not depend on the mail addresses.
 
@@ -17,9 +14,6 @@ That could have been the end of it, if not for a couple of days ago, when I deci
 
 Turns out setting a CNAME entry for a domain pretty much overrides everything. CNAME's are designed to redirect *all* traffic to a (sub)domain to another domain, all traffic, including email. When A CNAME has been set the DNS server will ignore any other entry for that same name or flat out reject you setting any additional entries for the domain. Thus by setting one for 'justus.science' I inadvertently directed all emails going to *any-address@justus.science* to GitHub pages, which does not provide an email service and as a result dropped them.
 
-Fixing it was rather simple. A second look at the GitHub pages help pages revealed that, any type of DNS entry could be used for a page (and why shouldn't it). So I changed the CNAME entrty to an A entry[^aentry] to [GitHub's IP][githubname], waited for the TTL to expire, send test mails again and suddenly they all arrived as expected, where expected. The MX entry was in effect.
+Fixing it was rather simple. A second look at the GitHub pages help pages revealed that, any type of DNS entry could be used for a page (and why shouldn't it). So I changed the CNAME entrty to an A entry to [GitHub's IP][githubname], waited for the TTL to expire, send test mails again and suddenly they all arrived as expected, where expected. The MX entry was in effect.
 
 [githubname]: https://help.github.com/articles/tips-for-configuring-an-a-record-with-your-dns-provider/
-
-[^aentry]:
-    If you'd like to know more about setting A names with GitHub, [here][githubname] is the official help page.
