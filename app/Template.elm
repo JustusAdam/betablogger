@@ -3,7 +3,7 @@ module Template where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events
 import Dict exposing (Dict)
 import Maybe exposing (withDefault)
 import Maybe.Extra exposing (or)
@@ -16,7 +16,7 @@ import Json.Decode as Decode
 import Util exposing (singleton)
 import OnePageStack.Types exposing (..)
 import OnePageStack.Provider.Index exposing (PostMeta)
-import OnePageStack.Provider.Util exposing (navigate)
+import OnePageStack.Provider.Util
 import OnePageStack.Provider.Projects exposing (Project)
 import Date
 
@@ -35,14 +35,13 @@ clearfix = div [class "clearfix"] []
 renderIndex : String -> AppInterface -> (List PostMeta) -> Task.Task String Html
 renderIndex basePath i postData =
   let
-    {navigator} = i
     content =
       postData
       |> List.sortBy (Date.toTime << .date)
       |> List.reverse
       |> List.map (\pm ->
               li [ class "element" ]
-                [ a [ onClick navigator (navigate <| "post/" ++ pm.location)]
+                [ a [ href <| "#post" </> pm.location]
                     ([ h3 [] [text pm.title]]
                     ++ case pm.description of
                         Nothing -> []
@@ -147,14 +146,14 @@ sidebar basePath =
   |> Task.mapError toString
 
 
-headerImpl : AppInterface -> Html
-headerImpl {navigator, currentUrl} =
+headerImpl :  Html
+headerImpl =
   div [ class "top-bar" ]
     [ div [ class "wrapper" ]
       [ ul [ class "page-menu" ]
         [ li [ class "home" ]
-          [ a [ onClick navigator <| Just "/" ] [ text "Justus's homepage v3.0" ] ]
-        , li [] [ a [ onClick navigator <| Just "projects" ] [ text "Projects" ]]
+          [ a [ href "#" ] [ text "Justus's homepage v3.0" ] ]
+        , li [] [ a [ href "#projects" ] [ text "Projects" ]]
         ]
       ]
     ]
@@ -171,7 +170,7 @@ pageTemplate : PageInformation -> Html
 pageTemplate { interface, title, subtitle, content } =
   div
     [ class "page-container" ]
-    <| headerImpl interface
+    <| headerImpl
     :: (case title `or` subtitle of
           Nothing -> []
           Just _ ->

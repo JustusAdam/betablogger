@@ -17,6 +17,7 @@ import Path.Url exposing ((</>))
 
 (=>) = (,)
 
+type M = M { a : Int }
 
 basePath : String
 basePath = "/blog-data"
@@ -47,6 +48,3 @@ port tasks : Signal (Task String ())
 port tasks =
   server
     providers
-
-port lc : Signal (Task String ())
-port lc = lcTask

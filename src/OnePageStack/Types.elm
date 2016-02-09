@@ -10,13 +10,10 @@ type Page
   | PageLoading
   | PageNotFound String
 
-type alias LocationChange = Maybe String
-type alias Targeter = Signal.Address LocationChange
 type alias ContentHook = Signal.Address Page
 type alias Handler = AppInterface -> String -> Task String Html
 type alias Providers = Dict.Dict String Handler
 type alias AppInterface =
   { canvas : ContentHook
-  , navigator : Targeter
   , currentUrl : String
   }
