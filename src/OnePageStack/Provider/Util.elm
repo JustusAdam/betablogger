@@ -20,10 +20,5 @@ mkProvider fetchTask renderer interface r =
     `Task.andThen` renderer interface
 
 
-
-navigate : String -> LocationChange
-navigate = Just
-
-
 withTemplate : (Html -> Html) -> Handler -> Handler
 withTemplate template f interface r = Task.map template (f interface r)

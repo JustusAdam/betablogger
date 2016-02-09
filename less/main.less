@@ -1,9 +1,9 @@
 @font-color: rgb(59, 59, 59);
 @header-color: rgb(56, 92, 139);
-@light-blue: rgb(32, 154, 232);
+@light-blue: rgb(22, 74, 231);
 @white-isch-color: rgb(245, 245, 245);
 @bright-grey: rgb(235, 235, 235);
-@heading-color: @light-blue;
+@heading-color: #2e55b3;
 
 h1, h2, h3, h4, h5, h6 {
   color: @heading-color;
@@ -13,7 +13,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-a {
+a, a:visited {
+  color: @light-blue;
   text-decoration: none;
 }
 
@@ -51,6 +52,9 @@ body {
     .description {
       font-weight: 100;
     }
+  }
+  a, a:visited {
+    color: @font-color;
   }
 }
 
@@ -126,6 +130,10 @@ footer {
   background-color: @header-color;
   color: @white-isch-color;
   border-bottom: 2px solid darken(@header-color, 10%);
+
+  a, a:visited {
+    color: @white-isch-color;
+  }
 }
 
 .page-menu {
@@ -178,7 +186,7 @@ article {
     font-size: small;
     color: lighten(@font-color, 30%);
 
-    a {
+    a, a:visited {
       color: lighten(@font-color, 30%);
     }
   }

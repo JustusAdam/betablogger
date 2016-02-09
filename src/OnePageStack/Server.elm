@@ -90,29 +90,10 @@ contentHook : Signal.Mailbox Page
 contentHook = Signal.mailbox PageLoading
 
 
-locationChanger : Signal.Mailbox LocationChange
-locationChanger = Signal.mailbox Nothing
-
-
-lcTask : Signal (Task String ())
-lcTask = Signal.map2 (\orig change ->
-  case change of
-    Nothing -> Task.succeed ()
-    Just chng ->
-      let
-        basepath = String.split "#" orig
-                    |> List.head
-                    |> withDefault ""
-      in
-        History.setPath <| basepath ++ "#" ++ chng)
-  (Signal.sampleOn locationChanger.signal History.path)
-  locationChanger.signal
-
-
 interfaceSignal : Signal AppInterface
 interfaceSignal =
   Signal.map
-  (String.dropLeft 1 >> AppInterface contentHook.address locationChanger.address)
+  (String.dropLeft 1 >> AppInterface contentHook.address)
   History.hash
 
 
