@@ -4,7 +4,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: #209ae8;
+  color: #2e55b3;
 }
 h1 a,
 h2 a,
@@ -12,9 +12,11 @@ h3 a,
 h4 a,
 h5 a,
 h6 a {
-  color: #209ae8;
+  color: #2e55b3;
 }
-a {
+a,
+a:visited {
+  color: #164ae7;
   text-decoration: none;
 }
 h3 {
@@ -46,6 +48,10 @@ body {
 }
 .post-list .element .description {
   font-weight: 100;
+}
+.post-list a,
+.post-list a:visited {
+  color: #3b3b3b;
 }
 .sidebar-container {
   float: left;
@@ -107,6 +113,12 @@ header {
   color: #f5f5f5;
   border-bottom: 2px solid #294467;
 }
+.top-bar a,
+header a,
+.top-bar a:visited,
+header a:visited {
+  color: #f5f5f5;
+}
 .page-menu {
   padding: 0;
   margin: 0;
@@ -155,7 +167,9 @@ article {
   color: #888888;
 }
 .project .language a,
-.project .stats a {
+.project .stats a,
+.project .language a:visited,
+.project .stats a:visited {
   color: #888888;
 }
 .project .language {
